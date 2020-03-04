@@ -1,13 +1,10 @@
 ﻿using System;
-using VComputer.Components;
 
 namespace VComputer
 {
     internal static class Program
     {
-        private const int ClockInterval = 1000;
-
-        private const double ClockIntervalStep = 1.1d;
+        public const int ComputerBitCount = 8;
 
         private static bool _shutdownHasStarted = false;
 
@@ -28,7 +25,7 @@ namespace VComputer
 
         private static void RunComputer()
         {
-            using var clock = new Clock(ClockInterval);
+            using var computer = new Computer(ComputerBitCount);
 
             while (!_shutdownHasStarted)
             {
@@ -36,24 +33,7 @@ namespace VComputer
                     continue;
 
                 var key = Console.ReadKey(intercept: true);
-                switch (key.Key)
-                {
-                    case ConsoleKey.T:
-                        clock.IsEnabled ^= true;
-                        break;
-
-                    case ConsoleKey.S:
-                        clock.Step();
-                        break;
-
-                    case ConsoleKey.LeftArrow:
-                        clock.Interval /= ClockIntervalStep;
-                        break;
-
-                    case ConsoleKey.RightArrow:
-                        clock.Interval *= ClockIntervalStep;
-                        break;
-                }
+                computer.HandleInput(key);
             }
         }
     }
