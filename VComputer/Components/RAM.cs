@@ -1,56 +1,54 @@
 ﻿using System;
+using VComputer.Util;
 
 namespace VComputer.Components
 {
-    public sealed class RAM : IBusComponent
+    public sealed class RAM : BaseComponent
     {
-        private readonly Bus _bus;
+        private readonly int _bits;
         private readonly bool[][] _values;
 
-        public RAM(Bus bus)
+        public RAM(int bits)
         {
-            _bus = bus;
-
             // Init ram.
-            int ramSize = (int)Math.Pow(2, bus.Lines.Length);
+            int ramSize = (int)Math.Pow(2, bits);
             _values = new bool[ramSize][];
             for (int i = 0; i < ramSize; i++)
             {
-                _values[i] = new bool[bus.Lines.Length];
+                _values[i] = new bool[bits];
             }
+
+            _bits = bits;
         }
 
+        public bool Input { get; set; }
+        public bool Output { get; set; }
         public int Address { get; set; }
 
-        public void Read()
+        public override void Connect(Bus bus)
         {
-            _bus.Lines.CopyTo(_values[Address], 0);
+            ConfigurationUtil.AssertBitCount(_bits, bus.Bits);
+            base.Connect(bus);
         }
 
-        public void Write()
-        {
-            _values[Address].CopyTo(_bus.Lines, 0);
-        }
-    }
+        #region Callback
 
-    public sealed class RAMController : IBusComponent
-    {
-        private readonly RAM _ram;
-        private readonly Bus _bus;
-
-        public RAMController(RAM ram, Bus bus)
+        protected override void Write()
         {
-            _ram = ram;
-            _bus = bus;
+            if (!Output || Bus is null)
+                return;
+
+            _values[Address].CopyTo(Bus.Lines, 0);
         }
 
-        public void Read()
+        protected override void Read()
         {
+            if (!Input || Bus is null)
+                return;
+
+            Bus.Lines.CopyTo(_values[Address], 0);
         }
 
-        public void Write()
-        {
-            throw new InvalidOperationException("");
-        }
+        #endregion Callback
     }
 }

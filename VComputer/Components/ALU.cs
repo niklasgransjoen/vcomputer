@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 
 namespace VComputer.Components
 {
@@ -12,106 +11,129 @@ namespace VComputer.Components
         Subtract,
     }
 
-    public sealed class ALU : IBusComponent
+    public sealed class ALU : BaseComponent
     {
         private readonly RegA _regA;
         private readonly RegB _regB;
-        private readonly Bus _bus;
 
-        public ALU(RegA regA, RegB regB, Bus bus)
+        public ALU(RegA regA, RegB regB)
         {
             _regA = regA;
             _regB = regB;
-            _bus = bus;
         }
 
+        public bool Output { get; set; }
         public ALUMode Mode { get; set; }
 
-        public void Read()
-        {
-            throw new InvalidOperationException("The ALU cannot read from the BUS.");
-        }
+        #region Callbacks
 
-        public void Write()
+        protected override void Write()
         {
-            bool[] a = _regA.Values.ToArray();
-            bool[] b = _regB.Values.ToArray();
+            if (!Output || Bus is null)
+                return;
 
-            var result = Mode switch
+            ReadOnlySpan<bool> a = _regA.Values.Span;
+            ReadOnlySpan<bool> b = _regB.Values.Span;
+            Span<bool> result = Bus.Lines;
+
+            switch (Mode)
             {
-                ALUMode.And => And(a, b),
-                ALUMode.Or => Or(a, b),
-                ALUMode.XOr => XOr(a, b),
-                ALUMode.Add => Add(a, b),
-                ALUMode.Subtract => Sub(a, b),
+                case ALUMode.And:
+                    And(in a, in b, in result);
+                    break;
 
-                _ => throw new Exception($"Unexpected ALU Mode '{Mode}'."),
-            };
-        }
+                case ALUMode.Or:
+                    Or(in a, in b, in result);
+                    break;
 
-        private bool[] And(bool[] a, bool[] b)
-        {
-            bool[] values = new bool[a.Length];
-            for (int i = 0; i < values.Length; i++)
-            {
-                values[i] = a[i] & b[i];
+                case ALUMode.XOr:
+                    XOr(in a, in b, in result);
+                    break;
+
+                case ALUMode.Add:
+                    ClearSpan(in result);
+                    Add(in a, in b, in result);
+                    break;
+
+                default:
+                case ALUMode.Subtract:
+                    ClearSpan(in result);
+                    Sub(in a, in b, in result);
+                    break;
             }
-
-            return values;
         }
 
-        private bool[] Or(bool[] a, bool[] b)
+        #endregion Callbacks
+
+        #region ALU logic
+
+        private static void And(in ReadOnlySpan<bool> a, in ReadOnlySpan<bool> b, in Span<bool> result)
         {
-            bool[] values = new bool[a.Length];
-            for (int i = 0; i < values.Length; i++)
+            for (int i = 0; i < result.Length; i++)
             {
-                values[i] = a[i] | b[i];
+                result[i] = a[i] & b[i];
             }
-
-            return values;
         }
 
-        private bool[] XOr(bool[] a, bool[] b)
+        private static void Or(in ReadOnlySpan<bool> a, in ReadOnlySpan<bool> b, in Span<bool> result)
         {
-            bool[] values = new bool[a.Length];
-            for (int i = 0; i < values.Length; i++)
+            for (int i = 0; i < result.Length; i++)
             {
-                values[i] = a[i] ^ b[i];
+                result[i] = a[i] | b[i];
             }
-
-            return values;
         }
 
-        private bool[] Add(bool[] a, bool[] b, bool carry = false)
+        private static void XOr(in ReadOnlySpan<bool> a, in ReadOnlySpan<bool> b, in Span<bool> result)
+        {
+            for (int i = 0; i < result.Length; i++)
+            {
+                result[i] = a[i] ^ b[i];
+            }
+        }
+
+        private static void Add(in ReadOnlySpan<bool> a, in ReadOnlySpan<bool> b, in Span<bool> result)
         {
             bool[] values = new bool[a.Length];
-            values[a.Length - 1] = carry;
 
-            bool[] x = XOr(a, b);
+            Span<bool> x = stackalloc bool[result.Length];
+            XOr(in a, in b, in x);
 
-            for (int i = values.Length - 1; i >= 0; i--)
+            for (int i = result.Length - 1; i >= 0; i--)
             {
                 // Carry.
                 if (i != 0)
                 {
-                    values[i - 1] = (a[i] & b[i]) | (x[i] & values[i]);
+                    result[i - 1] = (a[i] & b[i]) | (x[i] & result[i]);
                 }
 
                 // Value.
-                values[i] ^= x[i];
+                result[i] ^= x[i];
             }
-
-            return values;
         }
 
-        private bool[] Sub(bool[] a, bool[] b)
+        private static void Sub(in ReadOnlySpan<bool> a, in ReadOnlySpan<bool> b, in Span<bool> result)
         {
+            Span<bool> bInv = stackalloc bool[b.Length];
             for (int i = 0; i < b.Length; i++)
             {
-                b[i] ^= true;
+                bInv[i] = !b[i];
             }
 
-            return Add(a, b, carry: true);
+            // Set least significant bit in result because bInt should be incremented by one.
+            result[^1] = true;
+
+            ReadOnlySpan<bool> readOnlyBInv = bInv;
+            Add(in a, in readOnlyBInv, in result);
+        }
+
+        #endregion ALU logic
+
+        private static void ClearSpan(in Span<bool> span)
+        {
+            for (int i = 0; i < span.Length; i++)
+            {
+                span[i] = false;
+            }
         }
     }
 }

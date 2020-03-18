@@ -8,67 +8,73 @@ namespace VComputer
     /// </summary>
     public sealed class Computer : IDisposable
     {
-        private const int ClockInterval = 1000;
-
-        private const double ClockIntervalStep = 1.1d;
-
-        private readonly Clock _clock;
+        private readonly IComponent[] _components;
         private readonly Bus _bus;
-        private readonly RegA _regA;
-        private readonly RegB _regB;
-        private readonly ALU _alu;
 
         #region Construct & Dispose
 
-        public Computer(int bits)
+        public Computer(ComputerDefinition definition)
         {
-            _clock = new Clock(ClockInterval);
-            _bus = new Bus(bits);
+            Clock = new Clock();
+            _bus = new Bus(definition.Bits);
 
-            _regA = new RegA(_bus);
-            _regB = new RegB(_bus);
-            _alu = new ALU(_regA, _regB, _bus);
+            _components = InitializeComponents(definition.Bits);
+        }
 
-            SubscribeToEvents();
+        private IComponent[] InitializeComponents(int bits)
+        {
+            var programCounter = new ProgramCounter();
+            var ram = new RAM(bits);
+            var ramController = new RAMController(ram);
+
+            var regA = new RegA(bits);
+            var regB = new RegB(bits);
+            var alu = new ALU(regA, regB);
+
+            IComponent[] components = new IComponent[]
+            {
+                programCounter,
+                ram,
+                ramController,
+
+                regA,
+                regB,
+                alu,
+            };
+
+            ClockConnector clockConnector = new ClockConnector();
+            foreach (var component in components)
+            {
+                component.Connect(_bus);
+                component.Connect(clockConnector);
+            }
+
+            foreach (var action in clockConnector.RisingEdgeActions)
+            {
+                Clock.RisingEdgeActions.Add(action);
+            }
+            foreach (var action in clockConnector.FallingEdgeActions)
+            {
+                Clock.FallingEdgeActions.Add(action);
+            }
+
+            return components;
         }
 
         public void Dispose()
         {
-            _clock.Dispose();
-
-            UnsubscribeFromEvents();
-        }
-
-        private void SubscribeToEvents()
-        {
-        }
-
-        private void UnsubscribeFromEvents()
-        {
+            Clock.Dispose();
+            foreach (var component in _components)
+            {
+                if (component is IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
+            }
         }
 
         #endregion Construct & Dispose
 
-        public void HandleInput(ConsoleKeyInfo keyInfo)
-        {
-            switch (keyInfo.Key)
-            {
-                case ConsoleKey.T:
-                    _clock.IsEnabled ^= true;
-                    break;
-
-                case ConsoleKey.S:
-                    _clock.Step();
-                    break;
-
-                case ConsoleKey.LeftArrow:
-                    _clock.Interval /= ClockIntervalStep;
-                    break;
-
-                case ConsoleKey.RightArrow:
-                    _clock.Interval *= ClockIntervalStep;
-                    break;
-            }
-        }
+        public Clock Clock { get; }
     }
 }

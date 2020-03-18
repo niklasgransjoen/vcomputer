@@ -1,41 +1,60 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using VComputer.Util;
 
 namespace VComputer.Components
 {
-    public abstract class Registry : IBusComponent
+    public abstract class Registry : BaseComponent
     {
-        private readonly Bus _bus;
+        private readonly int _bits;
         private readonly bool[] _values;
 
-        protected Registry(Bus bus)
+        protected Registry(int bits)
         {
-            _bus = bus;
-            _values = new bool[bus.Lines.Length];
+            _values = new bool[bits];
+            _bits = bits;
         }
 
-        public IReadOnlyList<bool> Values => _values;
+        public bool Input { get; set; }
+        public bool Output { get; set; }
+        public ReadOnlyMemory<bool> Values => _values;
 
-        public void Read()
+        public override void Connect(Bus bus)
         {
-            _bus.Lines.CopyTo(_values, 0);
+            ConfigurationUtil.AssertBitCount(_bits, bus.Bits);
+            base.Connect(bus);
         }
 
-        public void Write()
+        #region Callbacks
+
+        protected override void Write()
         {
-            _values.CopyTo(_bus.Lines, 0);
+            if (!Output || Bus is null)
+                return;
+
+            _values.CopyTo(Bus.Lines, 0);
         }
+
+        protected override void Read()
+        {
+            if (!Input || Bus is null)
+                return;
+
+            Bus.Lines.CopyTo(_values, 0);
+        }
+
+        #endregion Callbacks
     }
 
     public sealed class RegA : Registry
     {
-        public RegA(Bus bus) : base(bus)
+        public RegA(int bits) : base(bits)
         {
         }
     }
 
     public sealed class RegB : Registry
     {
-        public RegB(Bus bus) : base(bus)
+        public RegB(int bits) : base(bits)
         {
         }
     }

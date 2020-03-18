@@ -1,14 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace VComputer.Components
 {
-    internal sealed class Clock : IDisposable
+    public sealed class Clock : IDisposable
     {
         public const int MinClockInterval = 2;
         public const int MaxClockInterval = 20_000;
 
         private readonly Timer _timer;
+
         private double _interval;
 
         // Stores falling or rising edge.
@@ -16,11 +19,9 @@ namespace VComputer.Components
 
         #region Construct & Dispose
 
-        public Clock(double interval)
+        public Clock()
         {
             _timer = new Timer(OnTick, state: null, Timeout.Infinite, Timeout.Infinite);
-
-            Interval = interval;
         }
 
         public void Dispose()
@@ -29,14 +30,6 @@ namespace VComputer.Components
         }
 
         #endregion Construct & Dispose
-
-        #region Events
-
-        public event Action? FallingEdge;
-
-        public event Action? RisingEdge;
-
-        #endregion Events
 
         #region Properties
 
@@ -58,9 +51,12 @@ namespace VComputer.Components
             }
         }
 
+        public ICollection<ClockAction> RisingEdgeActions { get; } = new List<ClockAction>();
+        public ICollection<ClockAction> FallingEdgeActions { get; } = new List<ClockAction>();
+
         #endregion Properties
 
-        #region Properties
+        #region Methods
 
         public void Step()
         {
@@ -70,7 +66,7 @@ namespace VComputer.Components
             }
         }
 
-        #endregion Properties
+        #endregion Methods
 
         private void OnTick(object? state)
         {
@@ -82,10 +78,12 @@ namespace VComputer.Components
 
         private void Tick()
         {
-            if (_state ^= true)
-                RisingEdge?.Invoke();
-            else
-                FallingEdge?.Invoke();
+            _state ^= true;
+            IEnumerable<ClockAction> actions = _state ? RisingEdgeActions : FallingEdgeActions;
+            foreach (var action in actions.OrderByDescending(a => a.Priority))
+            {
+                action.Callback();
+            }
         }
     }
 }
