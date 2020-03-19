@@ -141,12 +141,12 @@ namespace VComputer.Components
             if (Debugger != null)
             {
                 _debuggerInfoBuilder.AppendLine($"Instructions:   {flags}");
-                _debuggerInfoBuilder.AppendLine($"RAMAddress:     {RAM?.Address}");
+                _debuggerInfoBuilder.AppendLine($"RAMAddress:     0x{RAM?.Address:X2}");
                 _debuggerInfoBuilder.AppendLine($"RAM:            {MemoryUtil.ToString(RAM?.Values ?? Array.Empty<bool>())}");
                 _debuggerInfoBuilder.AppendLine($"RegA:           {MemoryUtil.ToString(RegA?.Values ?? Array.Empty<bool>())}");
                 _debuggerInfoBuilder.AppendLine($"RegB:           {MemoryUtil.ToString(RegB?.Values ?? Array.Empty<bool>())}");
                 _debuggerInfoBuilder.AppendLine($"InstructionReg: {MemoryUtil.ToString(InstructionReg?.Values ?? Array.Empty<bool>())}");
-                _debuggerInfoBuilder.AppendLine($"ProgramCounter: {ProgramCounter?.Value}");
+                _debuggerInfoBuilder.AppendLine($"ProgramCounter: 0x{ProgramCounter?.Value:X2}");
 
                 Debugger.Info = _debuggerInfoBuilder.ToString();
                 _debuggerInfoBuilder.Clear();

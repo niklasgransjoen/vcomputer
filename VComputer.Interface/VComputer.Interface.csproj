@@ -4,10 +4,10 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Nullable>enable</Nullable>
-    <RuntimeIdentifier>win-x86</RuntimeIdentifier>
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\VComputer.Assembler\VComputer.Assembler.csproj" />
     <ProjectReference Include="..\VComputer\VComputer.csproj" />
   </ItemGroup>
 

@@ -31,5 +31,18 @@ namespace VComputer.Interface.Helpers
 
             Console.ResetColor();
         }
+
+        public static void WriteLine(string value, ConsoleColor foreground = ConsoleColor.White, ConsoleColor background = ConsoleColor.Black)
+        {
+            Write(value, foreground, background);
+            Console.WriteLine();
+        }
+
+        public static void Block()
+        {
+            while (true)
+            {
+            }
+        }
     }
 }

@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using VComputer.Assembler;
 
 namespace VComputer.Interface
 {
-    public static class OpCodeDefinition
+    public static class LanguageDefinition
     {
-        public static IReadOnlyCollection<Instruction> Definition { get; }
+        public static IReadOnlyCollection<Instruction> InstructionDefinition { get; }
+        public static IReadOnlyCollection<AssemblyInstruction> AssemblyDefinition { get; }
 
-        static OpCodeDefinition()
+        static LanguageDefinition()
         {
             var definitions = new[]
             {
@@ -22,7 +24,21 @@ namespace VComputer.Interface
                 CreateOUT(),
                 CreateHLT(),
             };
-            Definition = Array.AsReadOnly(definitions);
+            InstructionDefinition = Array.AsReadOnly(definitions);
+
+            AssemblyDefinition = new[]
+            {
+                CreateAssemblyInstruction("NOP", OpCode.NOP),
+                CreateAssemblyInstruction("LDA", OpCode.LDA),
+                CreateAssemblyInstruction("STA", OpCode.STA),
+
+                CreateAssemblyInstruction("ADD", OpCode.ADD),
+
+                CreateAssemblyInstruction("JMP", OpCode.JMP),
+
+                CreateAssemblyInstruction("OUT", OpCode.OUT),
+                CreateAssemblyInstruction("HLT", OpCode.HLT),
+            };
         }
 
         #region Create instructions
@@ -102,6 +118,11 @@ namespace VComputer.Interface
         private static Instruction CreateInstruction(OpCode opCode, IEnumerable<ComputerFlags> microInstructions)
         {
             return new Instruction((int)opCode, microInstructions);
+        }
+
+        private static AssemblyInstruction CreateAssemblyInstruction(string command, OpCode opCode)
+        {
+            return new AssemblyInstruction(command, (int)opCode);
         }
     }
 
