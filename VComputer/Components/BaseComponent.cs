@@ -13,8 +13,8 @@
 
         public virtual void Connect(ClockConnector clock)
         {
-            clock.AddRisingEdgeAction(Write, ClockPriorities.Write);
-            clock.AddRisingEdgeAction(Read, ClockPriorities.Read);
+            clock.AddAction(Write, ClockPriorities.Write);
+            clock.AddAction(Read, ClockPriorities.Read);
         }
 
         public virtual void Connect(Bus bus)

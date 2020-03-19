@@ -4,8 +4,6 @@ namespace VComputer.Components
 {
     public sealed class ProgramCounter : BaseComponent
     {
-        private int _value;
-
         public ProgramCounter()
         {
         }
@@ -13,11 +11,12 @@ namespace VComputer.Components
         public bool Enable { get; set; }
         public bool Input { get; set; }
         public bool Output { get; set; }
+        public int Value { get; private set; }
 
         public override void Connect(ClockConnector clock)
         {
             base.Connect(clock);
-            clock.AddFallingEdgeAction(Increment, ClockPriorities.BeforeRead);
+            clock.AddAction(Increment, ClockPriorities.BeforeRead);
         }
 
         #region Callbacks
@@ -27,7 +26,7 @@ namespace VComputer.Components
             if (!Output || Bus is null)
                 return;
 
-            MemoryUtil.FromInt(_value, Bus.Lines);
+            MemoryUtil.FromInt(Value, Bus.Lines);
         }
 
         protected override void Read()
@@ -35,7 +34,7 @@ namespace VComputer.Components
             if (!Input || Bus is null)
                 return;
 
-            _value = MemoryUtil.ToInt(Bus.Lines);
+            Value = MemoryUtil.ToInt(Bus.Lines);
         }
 
         private void Increment()
@@ -43,7 +42,7 @@ namespace VComputer.Components
             if (!Enable)
                 return;
 
-            _value++;
+            Value++;
         }
 
         #endregion Callbacks

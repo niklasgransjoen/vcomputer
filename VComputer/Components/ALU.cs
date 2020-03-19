@@ -1,14 +1,16 @@
 ﻿using System;
+using VComputer.Util;
 
 namespace VComputer.Components
 {
     public enum ALUMode
     {
-        And,
-        Or,
-        XOr,
-        Add,
-        Subtract,
+        And = 0x1,
+        Or = 0x2,
+        XOr = 0x3,
+
+        Add = 0x4,
+        Subtract = 0x5,
     }
 
     public sealed class ALU : BaseComponent
@@ -23,7 +25,9 @@ namespace VComputer.Components
         }
 
         public bool Output { get; set; }
-        public ALUMode Mode { get; set; }
+        public bool Mode1 { get; set; }
+        public bool Mode2 { get; set; }
+        public bool Mode3 { get; set; }
 
         #region Callbacks
 
@@ -36,7 +40,8 @@ namespace VComputer.Components
             ReadOnlySpan<bool> b = _regB.Values.Span;
             Span<bool> result = Bus.Lines;
 
-            switch (Mode)
+            ALUMode mode = GetMode();
+            switch (mode)
             {
                 case ALUMode.And:
                     And(in a, in b, in result);
@@ -128,6 +133,18 @@ namespace VComputer.Components
 
         #endregion ALU logic
 
+        #region Utilities
+
+        private ALUMode GetMode()
+        {
+            Span<bool> span = stackalloc bool[3];
+            span[0] = Mode3;
+            span[1] = Mode2;
+            span[2] = Mode1;
+
+            return (ALUMode)MemoryUtil.ToInt(span);
+        }
+
         private static void ClearSpan(in Span<bool> span)
         {
             for (int i = 0; i < span.Length; i++)
@@ -135,5 +152,7 @@ namespace VComputer.Components
                 span[i] = false;
             }
         }
+
+        #endregion Utilities
     }
 }

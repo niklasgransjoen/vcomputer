@@ -8,8 +8,10 @@ namespace VComputer.Components
         private readonly int _bits;
         private readonly bool[][] _values;
 
-        public RAM(int bits)
+        public RAM(int bits, IRAMInitializer? initializer)
         {
+            _bits = bits;
+
             // Init ram.
             int ramSize = (int)Math.Pow(2, bits);
             _values = new bool[ramSize][];
@@ -18,16 +20,17 @@ namespace VComputer.Components
                 _values[i] = new bool[bits];
             }
 
-            _bits = bits;
+            initializer?.InitializeRAM(_values);
         }
 
         public bool Input { get; set; }
         public bool Output { get; set; }
         public int Address { get; set; }
+        public ReadOnlyMemory<bool> Values => _values[Address];
 
         public override void Connect(Bus bus)
         {
-            ConfigurationUtil.AssertBitCount(_bits, bus.Bits);
+            ConfigurationUtil.AssertBitCount(_bits, bus.BitCount);
             base.Connect(bus);
         }
 

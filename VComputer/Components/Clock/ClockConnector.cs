@@ -7,24 +7,17 @@ namespace VComputer.Components
     /// </summary>
     public sealed class ClockConnector
     {
-        private readonly List<ClockAction> _risingEdgeActions = new List<ClockAction>();
-        private readonly List<ClockAction> _fallingEdgeActions = new List<ClockAction>();
+        private readonly List<ClockAction> _clockActions = new List<ClockAction>();
 
         public ClockConnector()
         {
         }
 
-        public IReadOnlyList<ClockAction> RisingEdgeActions => _risingEdgeActions;
-        public IReadOnlyList<ClockAction> FallingEdgeActions => _fallingEdgeActions;
+        public IReadOnlyList<ClockAction> ClockActions => _clockActions.AsReadOnly();
 
         /// <summary>
         /// Adds action that's executed on the rising edge.
         /// </summary>
-        public void AddRisingEdgeAction(ClockAction action) => _risingEdgeActions.Add(action);
-
-        /// <summary>
-        /// Adds action that's executed on the falling edge.
-        /// </summary>
-        public void AddFallingEdgeAction(ClockAction action) => _fallingEdgeActions.Add(action);
+        public void AddAction(ClockAction action) => _clockActions.Add(action);
     }
 }

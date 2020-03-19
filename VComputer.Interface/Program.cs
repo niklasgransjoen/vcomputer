@@ -1,19 +1,21 @@
 ﻿using System;
+using System.Threading.Tasks;
+using VComputer.Interface.Components;
+using VComputer.Interface.Timers;
 
 namespace VComputer.Interface
 {
     internal static class Program
     {
         private const int ComputerBitCount = 8;
-        private const int DefaultClockInterval = 1000;
-        private const double ClockIntervalStep = 1.1d;
+        private const int DefaultClockInterval = 100;
 
         private static bool _shutdownHasStarted = false;
 
-        private static void Main()
+        private static async Task Main()
         {
             InitializeProgram();
-            RunComputer();
+            await RunComputer();
         }
 
         private static void InitializeProgram()
@@ -25,45 +27,32 @@ namespace VComputer.Interface
             };
         }
 
-        private static void RunComputer()
+        private static async Task RunComputer()
         {
             var computerDefinition = new ComputerDefinition
             {
                 Bits = ComputerBitCount,
+                Inctructions = OpCodeDefinition.Definition,
+                Timer = new MultimediaTimer(),
+                RAMInitializer = new RAMInitializer(),
+                OutputReg = new Display(),
+                Debugger = new Debugger(),
             };
 
             using var computer = new Computer(computerDefinition);
+            InputHandler inputHandler = new InputHandler(computer);
+
+            inputHandler.PrintInfo();
             computer.Clock.Interval = DefaultClockInterval;
 
             while (!_shutdownHasStarted)
             {
-                if (!Console.KeyAvailable)
-                    continue;
-
-                var key = Console.ReadKey(intercept: true);
-                HandleInput(computer, key);
-            }
-        }
-
-        private static void HandleInput(Computer computer, ConsoleKeyInfo keyInfo)
-        {
-            switch (keyInfo.Key)
-            {
-                case ConsoleKey.T:
-                    computer.Clock.IsEnabled ^= true;
-                    break;
-
-                case ConsoleKey.S:
-                    computer.Clock.Step();
-                    break;
-
-                case ConsoleKey.LeftArrow:
-                    computer.Clock.Interval /= ClockIntervalStep;
-                    break;
-
-                case ConsoleKey.RightArrow:
-                    computer.Clock.Interval *= ClockIntervalStep;
-                    break;
+                await Task.Delay(100);
+                if (Console.KeyAvailable)
+                {
+                    var key = Console.ReadKey(intercept: true);
+                    inputHandler.HandleInput(key);
+                }
             }
         }
     }

@@ -5,13 +5,13 @@
     /// </summary>
     public sealed class Bus
     {
-        public Bus(int bits)
+        public Bus(int bitCount)
         {
-            Bits = bits;
-            Lines = new bool[bits];
+            BitCount = bitCount;
+            Lines = new bool[bitCount];
         }
 
-        public int Bits { get; }
+        public int BitCount { get; }
         public bool[] Lines { get; }
     }
 }

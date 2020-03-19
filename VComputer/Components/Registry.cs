@@ -3,7 +3,12 @@ using VComputer.Util;
 
 namespace VComputer.Components
 {
-    public abstract class Registry : BaseComponent
+    public interface IRegistry : IComponent
+    {
+        ReadOnlyMemory<bool> Values { get; }
+    }
+
+    public abstract class Registry : BaseComponent, IRegistry
     {
         private readonly int _bits;
         private readonly bool[] _values;
@@ -20,7 +25,7 @@ namespace VComputer.Components
 
         public override void Connect(Bus bus)
         {
-            ConfigurationUtil.AssertBitCount(_bits, bus.Bits);
+            ConfigurationUtil.AssertBitCount(_bits, bus.BitCount);
             base.Connect(bus);
         }
 
@@ -56,6 +61,28 @@ namespace VComputer.Components
     {
         public RegB(int bits) : base(bits)
         {
+        }
+    }
+
+    public sealed class InstructionReg : Registry
+    {
+        private readonly Memory<bool> _blanker;
+        private readonly int _bits;
+
+        public InstructionReg(int bits) : base(bits)
+        {
+            _blanker = new bool[bits / 2];
+            _bits = bits;
+        }
+
+        protected override void Write()
+        {
+            if (!Output || Bus is null)
+                return;
+
+            Memory<bool> lines = Bus.Lines;
+            _blanker.CopyTo(lines);
+            Values.Slice(_bits / 2).CopyTo(lines.Slice(_bits / 2));
         }
     }
 }
