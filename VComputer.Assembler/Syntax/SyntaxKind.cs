@@ -10,7 +10,7 @@
         IntegerToken,
         WhitespaceToken,
         NewLineToken,
-        //LineCommentToken,
+        LineCommentToken,
 
         // Compilation
 

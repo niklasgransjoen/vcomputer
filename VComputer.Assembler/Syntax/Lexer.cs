@@ -41,6 +41,10 @@ namespace VComputer.Assembler.Syntax
             {
                 switch (Current)
                 {
+                    case '#':
+                        ReadLineCommentToken();
+                        break;
+
                     case '0':
                     case '1':
                     case '2':
@@ -124,6 +128,17 @@ namespace VComputer.Assembler.Syntax
                     syntaxKind = default;
                     return false;
             }
+        }
+
+        private void ReadLineCommentToken()
+        {
+            do
+            {
+                Next();
+            }
+            while (Current != '\r' && Current != '\n' && Current != '\0');
+
+            _kind = SyntaxKind.LineCommentToken;
         }
 
         private void ReadWhitespace()

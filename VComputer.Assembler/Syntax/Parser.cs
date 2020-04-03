@@ -7,6 +7,13 @@ namespace VComputer.Assembler.Syntax
 {
     internal sealed class Parser
     {
+        private static readonly HashSet<SyntaxKind> _skippableTokens = new HashSet<SyntaxKind>
+        {
+            SyntaxKind.BadToken,
+            SyntaxKind.WhitespaceToken,
+            SyntaxKind.LineCommentToken,
+        };
+
         private readonly ReadOnlyMemory<SyntaxToken> _tokens;
         private int _position;
 
@@ -20,8 +27,10 @@ namespace VComputer.Assembler.Syntax
             {
                 token = lexer.Lex();
 
-                if (token.Kind != SyntaxKind.BadToken && token.Kind != SyntaxKind.WhitespaceToken)
+                if (!_skippableTokens.Contains(token.Kind))
+                {
                     tokens.Add(token);
+                }
             } while (token.Kind != SyntaxKind.EndOfFileToken);
 
             _tokens = tokens.ToArray();
