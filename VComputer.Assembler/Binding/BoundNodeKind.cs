@@ -5,6 +5,7 @@
         // Statements
 
         CommandStatement,
+        DirectiveStatement,
         ConstantDeclarationStatement,
         LabelDeclarationStatement,
 

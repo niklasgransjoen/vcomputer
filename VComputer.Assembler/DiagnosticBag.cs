@@ -69,6 +69,18 @@ namespace VComputer.Assembler
             Report(span, message);
         }
 
+        public void ReportBadDirective(TextSpan span, string name)
+        {
+            string message = $"Directive .'{name}' does not exist.";
+            Report(span, message);
+        }
+
+        public void ReportMissingOperand(TextSpan span)
+        {
+            string message = $"Missing required operand on command or directive.";
+            Report(span, message);
+        }
+
         #endregion Report
     }
 }

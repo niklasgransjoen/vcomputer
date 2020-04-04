@@ -30,6 +30,9 @@ namespace VComputer.Assembler.Syntax
 
         public override IEnumerable<SyntaxNode> GetChildren() => Enumerable.Empty<SyntaxNode>();
 
+        /// <summary>
+        /// Returns the text of this token as a string.
+        /// </summary>
         public override string ToString() => Text.ToString();
 
         #endregion Methods

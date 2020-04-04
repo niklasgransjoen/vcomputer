@@ -113,6 +113,10 @@ namespace VComputer.Assembler.Syntax
                         ReadLabel();
                         break;
 
+                    case '.':
+                        ReadDirective();
+                        break;
+
                     case ' ':
                     case '\t':
                         ReadWhitespace();
@@ -178,27 +182,33 @@ namespace VComputer.Assembler.Syntax
 
         private void ReadWhitespace()
         {
-            while (Current == ' ' || Current == '\t')
+            do
+            {
                 Next();
+            }
+            while (Current == ' ' || Current == '\t');
 
             _kind = SyntaxKind.WhitespaceToken;
         }
 
         private void ReadNewLine()
         {
-            while (Current == '\n' || Current == '\r')
+            do
+            {
                 Next();
+            }
+            while (Current == '\n' || Current == '\r');
 
             _kind = SyntaxKind.NewLineToken;
         }
 
         private void ReadInteger()
         {
-            // Keep reading digits as long as they're available,
-            while (char.IsLetterOrDigit(Current))
+            do
             {
                 Next();
             }
+            while (char.IsLetterOrDigit(Current));
 
             _kind = SyntaxKind.IntegerToken;
             _value = _text.SubString(_start, _position - _start);
@@ -221,7 +231,7 @@ namespace VComputer.Assembler.Syntax
             {
                 Next();
             }
-            while (char.IsLetter(Current));
+            while (char.IsLower(Current));
             _value = _text.SubString(_start, _position - _start);
 
             if (Match(':'))
@@ -232,6 +242,16 @@ namespace VComputer.Assembler.Syntax
             {
                 _kind = SyntaxKind.LabelToken;
             }
+        }
+
+        private void ReadDirective()
+        {
+            do
+            {
+                Next();
+            }
+            while (char.IsLower(Current));
+            _kind = SyntaxKind.DirectiveToken;
         }
 
         #endregion Lexing

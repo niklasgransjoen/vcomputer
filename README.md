@@ -94,10 +94,14 @@ The assembler currently provides support for the following functionality:
 - Commands
 - Labels
 - Constants
+- Assembly directives
 
 Planned functionality includes:
-- Assembly directives
 - Macros
+
+Supported assembly directives:
+- .org: Set the location pointer of the assembler.
+- .word: Write a literal to the current location, and advance the location pointer by one.
 
 ### VComputer.Interface
 

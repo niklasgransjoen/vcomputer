@@ -14,6 +14,7 @@ namespace VComputer.Assembler.Binding
         private readonly DiagnosticBag _diagnostics = new DiagnosticBag();
 
         private readonly Dictionary<string, int> _instructions;
+        private readonly Dictionary<string, Directive> _directives = Directive.Directives.ToDictionary(d => d.Name);
         private readonly Dictionary<string, LabelSymbol> _labels = new Dictionary<string, LabelSymbol>();
         private readonly Dictionary<string, ConstantSymbol> _constants = new Dictionary<string, ConstantSymbol>();
         private readonly ImmutableArray<BoundStatement> _statements;
@@ -78,6 +79,7 @@ namespace VComputer.Assembler.Binding
         private BoundStatement BindStatement(StatementSyntax statement) => statement.Kind switch
         {
             SyntaxKind.CommandStatement => BindCommandStatement((CommandStatement)statement),
+            SyntaxKind.DirectiveStatement => BindDirectiveStatement((DirectiveStatement)statement),
             SyntaxKind.ConstantDeclarationStatement => BindConstantDeclarationStatement((ConstantDeclarationStatement)statement),
             SyntaxKind.LabelDeclarationStatement => BindLabelStatement((LabelDeclarationStatement)statement),
 
@@ -86,11 +88,13 @@ namespace VComputer.Assembler.Binding
 
         private BoundCommandStatement BindCommandStatement(CommandStatement statement)
         {
-            string command = statement.CommandToken.Text.ToString();
+            string command = statement.CommandToken.ToString();
             if (!_instructions.TryGetValue(command, out var opCode))
             {
                 _diagnostics.ReportUndefinedCommand(statement.CommandToken.Span, command);
-                _instructions[command] = 0;
+
+                opCode = 0;
+                _instructions.Add(command, opCode);
             }
 
             BoundExpression? operand = null;
@@ -98,6 +102,32 @@ namespace VComputer.Assembler.Binding
                 operand = BindExpression(statement.OperandExpression);
 
             return new BoundCommandStatement(opCode, operand);
+        }
+
+        private BoundDirectiveStatement BindDirectiveStatement(DirectiveStatement statement)
+        {
+            string directiveName = statement.DirectiveToken.Text
+                .Slice(1) // remove the dot.
+                .ToString();
+
+            if (!_directives.TryGetValue(directiveName, out var directive))
+            {
+                _diagnostics.ReportBadDirective(statement.DirectiveToken.Span, directiveName);
+
+                directive = Directive.NOOP;
+                _directives.Add(directiveName, directive);
+            }
+
+            BoundExpression? operand = null;
+            if (directive.HasOperand)
+            {
+                if (statement.OperandExpression != null)
+                    operand = BindExpression(statement.OperandExpression);
+                else
+                    _diagnostics.ReportMissingOperand(statement.Span);
+            }
+
+            return new BoundDirectiveStatement(directive, operand);
         }
 
         private BoundConstantDeclarationStatement BindConstantDeclarationStatement(ConstantDeclarationStatement statement)

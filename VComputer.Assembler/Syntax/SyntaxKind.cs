@@ -7,9 +7,11 @@
         BadToken,
         EndOfFileToken,
         IdentifierToken,
-        IntegerToken,
+        DirectiveToken,
         LabelToken,
         LabelDeclarationToken,
+        IntegerToken,
+        EqualsToken,
         WhitespaceToken,
         NewLineToken,
         LineCommentToken,
@@ -21,6 +23,7 @@
         // Statements
 
         CommandStatement,
+        DirectiveStatement,
         LabelDeclarationStatement,
         ConstantDeclarationStatement,
 
@@ -29,6 +32,5 @@
         LiteralExpression,
         NameExpression,
         LabelExpression,
-        EqualsToken,
     }
 }

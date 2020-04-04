@@ -93,6 +93,7 @@ namespace VComputer.Assembler.Syntax
             {
                 SyntaxKind.LabelDeclarationToken => ParseLabelStatement(),
                 SyntaxKind.IdentifierToken when LookAhead.Kind == SyntaxKind.EqualsToken => ParseConstantDeclarationStatement(),
+                SyntaxKind.DirectiveToken => ParseDirectiveStatement(),
                 _ => ParseCommandStatement(),
             };
         }
@@ -106,6 +107,21 @@ namespace VComputer.Assembler.Syntax
             return new CommandStatement(commandToken, operandExpression, newLineToken);
         }
 
+        private DirectiveStatement ParseDirectiveStatement()
+        {
+            var directiveToken = MatchToken(SyntaxKind.DirectiveToken);
+            var operandExpression = Current.Kind != SyntaxKind.NewLineToken ? ParseExpression() : null;
+            var newLineToken = MatchToken(SyntaxKind.NewLineToken);
+
+            return new DirectiveStatement(directiveToken, operandExpression, newLineToken);
+        }
+
+        private LabelDeclarationStatement ParseLabelStatement()
+        {
+            var labelToken = NextToken();
+            return new LabelDeclarationStatement(labelToken);
+        }
+
         private ConstantDeclarationStatement ParseConstantDeclarationStatement()
         {
             var identifer = MatchToken(SyntaxKind.IdentifierToken);
@@ -113,12 +129,6 @@ namespace VComputer.Assembler.Syntax
             var expression = ParseExpression();
 
             return new ConstantDeclarationStatement(identifer, equalsToken, expression);
-        }
-
-        private LabelDeclarationStatement ParseLabelStatement()
-        {
-            var labelToken = NextToken();
-            return new LabelDeclarationStatement(labelToken);
         }
 
         #endregion Statement
