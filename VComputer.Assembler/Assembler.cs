@@ -1,20 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Immutable;
+using VComputer.Assembler.Binding;
 using VComputer.Assembler.Syntax;
 
 namespace VComputer.Assembler
 {
     public sealed class Assembler
     {
-        private readonly Dictionary<string, int> _opCodes;
+        private readonly ImmutableArray<AssemblyInstruction> _definition;
 
-        public Assembler(IEnumerable<AssemblyInstruction> definition)
+        public Assembler(ImmutableArray<AssemblyInstruction> definition)
         {
-            if (definition is null)
-                throw new ArgumentNullException(nameof(definition));
-
-            _opCodes = definition.ToDictionary(d => d.Command, d => d.OpCode);
+            _definition = definition;
         }
 
         public int[] Assemble(string program, int bits)
@@ -25,23 +21,13 @@ namespace VComputer.Assembler
                 throw new AssemblyDiagnosticException(syntaxTree.Text, syntaxTree.Diagnostics);
             }
 
-            return Assemble(syntaxTree.Root.Commands.Span, bits);
-        }
-
-        private int[] Assemble(ReadOnlySpan<CommandStatementSyntax> commands, int bits)
-        {
-            int[] code = new int[commands.Length];
-            for (int i = 0; i < commands.Length; i++)
+            var boundCompilation = Binder.Bind(syntaxTree.Root, _definition);
+            if (boundCompilation.Diagnostics.Length != 0)
             {
-                var command = commands[i];
-                code[i] = _opCodes[command.OperatorStatement.Command] << bits / 2;
-                if (command.OperandExpression != null)
-                {
-                    code[i] += command.OperandExpression.Value;
-                }
+                throw new AssemblyDiagnosticException(syntaxTree.Text, boundCompilation.Diagnostics);
             }
 
-            return code;
+            return Evalutator.Evaluate(boundCompilation, bits);
         }
     }
 }

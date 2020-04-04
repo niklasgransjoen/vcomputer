@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using VComputer.Assembler;
 
 namespace VComputer.Interface
 {
     public static class LanguageDefinition
     {
-        public static IReadOnlyCollection<Instruction> InstructionDefinition { get; }
-        public static IReadOnlyCollection<AssemblyInstruction> AssemblyDefinition { get; }
+        public static ImmutableArray<Instruction> InstructionDefinition { get; }
+        public static ImmutableArray<AssemblyInstruction> AssemblyDefinition { get; }
 
         static LanguageDefinition()
         {
-            var definitions = new[]
+            InstructionDefinition = new[]
             {
                 CreateNOP(),
                 CreateLDA(),
@@ -23,8 +24,7 @@ namespace VComputer.Interface
 
                 CreateOUT(),
                 CreateHLT(),
-            };
-            InstructionDefinition = Array.AsReadOnly(definitions);
+            }.ToImmutableArray();
 
             AssemblyDefinition = new[]
             {
@@ -38,7 +38,7 @@ namespace VComputer.Interface
 
                 CreateAssemblyInstruction("OUT", OpCode.OUT),
                 CreateAssemblyInstruction("HLT", OpCode.HLT),
-            };
+            }.ToImmutableArray();
         }
 
         #region Create instructions

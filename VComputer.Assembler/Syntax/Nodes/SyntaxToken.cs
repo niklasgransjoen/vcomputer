@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using VComputer.Assembler.Text;
 
@@ -6,7 +7,7 @@ namespace VComputer.Assembler.Syntax
 {
     internal sealed class SyntaxToken : SyntaxNode
     {
-        public SyntaxToken(SyntaxKind kind, int position, string text, object? value)
+        public SyntaxToken(SyntaxKind kind, int position, ReadOnlyMemory<char> text, object? value)
         {
             Kind = kind;
             Position = position;
@@ -19,7 +20,7 @@ namespace VComputer.Assembler.Syntax
         public override SyntaxKind Kind { get; }
 
         public int Position { get; }
-        public string Text { get; }
+        public ReadOnlyMemory<char> Text { get; }
         public object? Value { get; }
         public override TextSpan Span => new TextSpan(Position, Text.Length);
 

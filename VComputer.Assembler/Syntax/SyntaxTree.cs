@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Collections.Immutable;
 using VComputer.Assembler.Text;
 
 namespace VComputer.Assembler.Syntax
@@ -14,7 +13,7 @@ namespace VComputer.Assembler.Syntax
 
             Text = text;
             Root = parser.ParseCompilationUnit();
-            Diagnostics = parser.Diagnostics.ToArray();
+            Diagnostics = ImmutableArray.CreateRange(parser.Diagnostics);
         }
 
         public static SyntaxTree Parse(string program)
@@ -28,7 +27,7 @@ namespace VComputer.Assembler.Syntax
         #endregion Constructor
 
         public SourceText Text { get; }
-        public ReadOnlyMemory<Diagnostic> Diagnostics { get; }
+        public ImmutableArray<Diagnostic> Diagnostics { get; }
         public CompilationUnitSyntax Root { get; }
     }
 }

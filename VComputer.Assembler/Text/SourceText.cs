@@ -57,15 +57,15 @@ namespace VComputer.Assembler.Text
             return _text;
         }
 
-        public string ToString(int start, int length) => _text.Substring(start, length);
+        public ReadOnlyMemory<char> SubString(int start, int length) => _text.AsMemory(start, length);
 
-        public string ToString(TextSpan span)
+        public ReadOnlyMemory<char> SubString(TextSpan span)
         {
             int length = span.Length;
             if (length <= 0)
-                return string.Empty;
+                return default;
 
-            return _text.Substring(span.Start, length);
+            return _text.AsMemory(span.Start, length);
         }
 
         #endregion Methods

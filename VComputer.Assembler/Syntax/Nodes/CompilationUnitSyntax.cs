@@ -1,27 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace VComputer.Assembler.Syntax
 {
     internal sealed class CompilationUnitSyntax : SyntaxNode
     {
-        public CompilationUnitSyntax(IEnumerable<CommandStatementSyntax> commands, SyntaxToken endOfFileToken)
+        public CompilationUnitSyntax(ImmutableArray<StatementSyntax> statements, SyntaxToken endOfFileToken)
         {
-            Commands = commands.ToArray();
+            Statements = statements;
             EndOfFileToken = endOfFileToken;
         }
 
-        public ReadOnlyMemory<CommandStatementSyntax> Commands { get; }
+        public ImmutableArray<StatementSyntax> Statements { get; }
         public SyntaxToken EndOfFileToken { get; }
 
         public override SyntaxKind Kind => SyntaxKind.CompilationUnit;
 
         public override IEnumerable<SyntaxNode> GetChildren()
         {
-            for (int i = 0; i < Commands.Length; i++)
+            for (int i = 0; i < Statements.Length; i++)
             {
-                yield return Commands.Span[i];
+                yield return Statements[i];
             }
 
             yield return EndOfFileToken;

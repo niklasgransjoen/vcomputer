@@ -45,6 +45,18 @@ namespace VComputer.Assembler
             Report(span, message);
         }
 
+        public void ReportUndefinedLabel(TextSpan span, string labelName)
+        {
+            string message = $"The label '{labelName}' does not exist.";
+            Report(span, message);
+        }
+
+        public void ReportUndefinedCommand(TextSpan span, string command)
+        {
+            string message = $"The command '{command}' does not exist.";
+            Report(span, message);
+        }
+
         #endregion Report
     }
 }

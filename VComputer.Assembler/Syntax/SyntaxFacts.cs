@@ -1,4 +1,6 @@
-﻿namespace VComputer.Assembler.Syntax
+﻿using System;
+
+namespace VComputer.Assembler.Syntax
 {
     public static class SyntaxFacts
     {
@@ -10,12 +12,13 @@
             };
         }
 
-        public static string? GetText(SyntaxKind kind)
+        public static bool TryGetText(SyntaxKind kind, out ReadOnlyMemory<char> text)
         {
-            return kind switch
+            text = kind switch
             {
-                _ => null,
+                _ => default,
             };
+            return !text.IsEmpty;
         }
     }
 }

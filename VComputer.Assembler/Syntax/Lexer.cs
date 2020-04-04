@@ -89,7 +89,7 @@ namespace VComputer.Assembler.Syntax
 
                     case ' ':
                     case '\t':
-                        ReadWhitespace();
+                        ReadWhitespaceToken();
                         break;
 
                     case '\r':
@@ -98,17 +98,23 @@ namespace VComputer.Assembler.Syntax
                         break;
 
                     default:
-                        Diagnostics.ReportBadCharacter(_position, Current);
-                        Next();
+                        if (char.IsWhiteSpace(Current))
+                            ReadWhitespaceToken();
+                        else if (char.IsLetter(Current))
+                            ReadLabelToken();
+                        else
+                        {
+                            Diagnostics.ReportBadCharacter(_position, Current);
+                            Next();
+                        }
                         break;
                 }
             }
 
-            string? text = SyntaxFacts.GetText(_kind);
-            if (text is null)
+            if (!SyntaxFacts.TryGetText(_kind, out var text))
             {
                 int length = _position - _start;
-                text = _text.ToString(_start, length);
+                text = _text.SubString(_start, length);
             }
 
             return new SyntaxToken(_kind, _start, text, _value);
@@ -141,7 +147,7 @@ namespace VComputer.Assembler.Syntax
             _kind = SyntaxKind.LineCommentToken;
         }
 
-        private void ReadWhitespace()
+        private void ReadWhitespaceToken()
         {
             while (Current == ' ' || Current == '\t')
                 Next();
@@ -170,12 +176,32 @@ namespace VComputer.Assembler.Syntax
 
         private void ReadCommandToken()
         {
-            while (char.IsUpper(Current))
+            do
             {
                 Next();
             }
+            while (char.IsUpper(Current));
 
             _kind = SyntaxKind.CommandToken;
+        }
+
+        private void ReadLabelToken()
+        {
+            do
+            {
+                Next();
+            }
+            while (char.IsLetter(Current));
+            _value = _text.SubString(_start, _position - _start);
+
+            if (Match(':'))
+            {
+                _kind = SyntaxKind.LabelDeclarationToken;
+            }
+            else
+            {
+                _kind = SyntaxKind.LabelToken;
+            }
         }
 
         #endregion Lexing
@@ -194,6 +220,17 @@ namespace VComputer.Assembler.Syntax
         private void Next()
         {
             _position++;
+        }
+
+        private bool Match(char expected)
+        {
+            if (Current == expected)
+            {
+                Next();
+                return true;
+            }
+
+            return false;
         }
 
         #endregion Helpers

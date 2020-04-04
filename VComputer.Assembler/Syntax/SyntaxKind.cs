@@ -8,6 +8,8 @@
         EndOfFileToken,
         CommandToken,
         IntegerToken,
+        LabelToken,
+        LabelDeclarationToken,
         WhitespaceToken,
         NewLineToken,
         LineCommentToken,
@@ -18,10 +20,13 @@
 
         // Statements
 
+        CommandStatement,
         OperatorStatement,
+        LabelStatement,
 
         // Expressions
 
-        OperandExpression,
+        LiteralExpression,
+        LabelExpression,
     }
 }

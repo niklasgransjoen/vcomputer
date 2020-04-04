@@ -21,7 +21,7 @@
 
         #region Methods
 
-        public override string ToString() => Text.ToString(Span);
+        public override string ToString() => Text.SubString(Span).ToString();
 
         #endregion Methods
     }

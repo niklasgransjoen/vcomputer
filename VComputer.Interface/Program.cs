@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.IO;
 using System.Threading.Tasks;
 using VComputer.Assembler;
@@ -22,7 +23,11 @@ namespace VComputer.Interface
         {
             InitializeApplication();
             var program = ReadProgram(ProgramPath);
-            await RunComputer(program);
+            var newProgram = new int[16];
+            program.CopyTo(newProgram, 0);
+            newProgram[14] = 1;
+
+            await RunComputer(newProgram);
         }
 
         private static void InitializeApplication()
@@ -58,12 +63,11 @@ namespace VComputer.Interface
             }
         }
 
-        private static void HandleDiagonstics(SourceText text, ReadOnlyMemory<Diagnostic> diagnostics)
+        private static void HandleDiagonstics(SourceText text, ImmutableArray<Diagnostic> diagnostics)
         {
-            var span = diagnostics.Span;
             for (int i = 0; i < diagnostics.Length; i++)
             {
-                var diagnostic = span[i];
+                var diagnostic = diagnostics[i];
 
                 int lineIndex = text.GetLineIndex(diagnostic.Span.Start);
                 TextLine line = text.Lines.Span[lineIndex];
@@ -76,9 +80,9 @@ namespace VComputer.Interface
                 TextSpan prefixSpan = TextSpan.FromBounds(line.Start, diagnostic.Span.Start);
                 TextSpan suffixSpan = TextSpan.FromBounds(diagnostic.Span.End, line.End);
 
-                string prefix = text.ToString(prefixSpan);
-                string error = text.ToString(diagnostic.Span);
-                string suffix = text.ToString(suffixSpan);
+                string prefix = text.SubString(prefixSpan).ToString();
+                string error = text.SubString(diagnostic.Span).ToString();
+                string suffix = text.SubString(suffixSpan).ToString();
 
                 Console.Write("    ");
                 Console.Write(prefix);

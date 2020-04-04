@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using VComputer.Assembler.Text;
 
@@ -14,7 +14,7 @@ namespace VComputer.Assembler.Syntax
             SyntaxKind.LineCommentToken,
         };
 
-        private readonly ReadOnlyMemory<SyntaxToken> _tokens;
+        private readonly SyntaxToken[] _tokens;
         private int _position;
 
         public Parser(SourceText text)
@@ -48,42 +48,85 @@ namespace VComputer.Assembler.Syntax
 
         public CompilationUnitSyntax ParseCompilationUnit()
         {
-            var commands = ParseCommands();
+            var statements = ParseStatements();
             var endOfFileToken = MatchToken(SyntaxKind.EndOfFileToken);
 
-            return new CompilationUnitSyntax(commands, endOfFileToken);
+            return new CompilationUnitSyntax(statements, endOfFileToken);
         }
 
-        private IEnumerable<CommandStatementSyntax> ParseCommands()
-        {
-            List<CommandStatementSyntax> _commands = new List<CommandStatementSyntax>();
-            while (LookAhead.Kind != SyntaxKind.EndOfFileToken)
-            {
-                var operatorStatement = ParseOperator();
-                var operandExpression = Current.Kind == SyntaxKind.IntegerToken ? ParseOperand() : null;
-                var newLineToken = MatchToken(SyntaxKind.NewLineToken);
+        #region Statement
 
-                var commandSyntax = new CommandStatementSyntax(operatorStatement, operandExpression, newLineToken);
-                _commands.Add(commandSyntax);
+        private ImmutableArray<StatementSyntax> ParseStatements()
+        {
+            var statements = ImmutableArray.CreateBuilder<StatementSyntax>();
+            while (Current.Kind != SyntaxKind.EndOfFileToken)
+            {
+                if (Current.Kind == SyntaxKind.NewLineToken)
+                {
+                    NextToken();
+                    continue;
+                }
+
+                StatementSyntax statement = Current.Kind switch
+                {
+                    SyntaxKind.LabelDeclarationToken => ParseLabelStatement(),
+                    _ => ParseCommandStatement(),
+                };
+                statements.Add(statement);
             }
 
-            return _commands;
+            return statements.ToImmutable();
         }
 
-        private OperatorStatement ParseOperator()
+        private CommandStatement ParseCommandStatement()
+        {
+            var operatorStatement = ParseOperatorStatement();
+            var operandExpression = Current.Kind != SyntaxKind.NewLineToken ? ParseExpression() : null;
+            var newLineToken = MatchToken(SyntaxKind.NewLineToken);
+
+            return new CommandStatement(operatorStatement, operandExpression, newLineToken);
+        }
+
+        private OperatorStatement ParseOperatorStatement()
         {
             var commandToken = MatchToken(SyntaxKind.CommandToken);
-            return new OperatorStatement(commandToken, commandToken.Text);
+            return new OperatorStatement(commandToken);
         }
 
-        private OperandExpression ParseOperand()
+        private LabelStatement ParseLabelStatement()
+        {
+            var labelToken = NextToken();
+            return new LabelStatement(labelToken);
+        }
+
+        #endregion Statement
+
+        #region Expression
+
+        private ExpressionSyntax ParseExpression()
+        {
+            if (Current.Kind == SyntaxKind.LabelToken)
+                return ParseLabelExpression();
+            else
+                return ParseLiteralExpression();
+        }
+
+        private LabelExpression ParseLabelExpression()
+        {
+            var label = MatchToken(SyntaxKind.LabelToken);
+            return new LabelExpression(label);
+        }
+
+        private LiteralExpression ParseLiteralExpression()
         {
             var operand = MatchToken(SyntaxKind.IntegerToken);
-            if (!int.TryParse(operand.Text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int value))
-                Diagnostics.ReportInvalidOperand(operand.Span, operand.Text);
+            if (!int.TryParse(operand.Text.Span, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int value))
+                Diagnostics.ReportInvalidOperand(operand.Span, operand.Text.ToString());
 
-            return new OperandExpression(operand, value);
+            return new LiteralExpression(operand, value);
         }
+
+        #endregion Expression
 
         #region Helper methods
 
@@ -91,9 +134,9 @@ namespace VComputer.Assembler.Syntax
         {
             int index = _position + offset;
             if (index >= _tokens.Length)
-                return _tokens.Span[_tokens.Length - 1];
+                return _tokens[^1];
 
-            return _tokens.Span[index];
+            return _tokens[index];
         }
 
         private SyntaxToken NextToken()
@@ -110,7 +153,7 @@ namespace VComputer.Assembler.Syntax
                 return NextToken();
 
             Diagnostics.ReportUnexpectedToken(Current.Span, Current.Kind, kind);
-            return new SyntaxToken(kind, Current.Position, string.Empty, null);
+            return new SyntaxToken(kind, Current.Position, default, null);
         }
 
         #endregion Helper methods

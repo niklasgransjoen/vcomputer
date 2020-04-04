@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace VComputer.Interface.Helpers
 {
@@ -38,6 +39,7 @@ namespace VComputer.Interface.Helpers
             Console.WriteLine();
         }
 
+        [DoesNotReturn]
         public static void Block()
         {
             while (true)

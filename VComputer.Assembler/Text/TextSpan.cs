@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace VComputer.Assembler.Text
 {
     /// <summary>
     /// Describes the position and length of a section of text.
     /// </summary>
+    [DebuggerDisplay("{Start}..{End}")]
     public readonly struct TextSpan : IEquatable<TextSpan>
     {
         #region Constructors
