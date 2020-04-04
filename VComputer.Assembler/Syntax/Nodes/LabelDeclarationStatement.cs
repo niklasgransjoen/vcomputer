@@ -2,14 +2,14 @@
 
 namespace VComputer.Assembler.Syntax
 {
-    internal sealed class LabelStatement : StatementSyntax
+    internal sealed class LabelDeclarationStatement : StatementSyntax
     {
-        public LabelStatement(SyntaxToken labelToken)
+        public LabelDeclarationStatement(SyntaxToken labelToken)
         {
             LabelToken = labelToken;
         }
 
-        public override SyntaxKind Kind => SyntaxKind.LabelStatement;
+        public override SyntaxKind Kind => SyntaxKind.LabelDeclarationStatement;
 
         public SyntaxToken LabelToken { get; }
 

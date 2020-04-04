@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using VComputer.Assembler.Binding;
+﻿using System.Collections.Generic;
 
 namespace VComputer.Assembler.Syntax
 {

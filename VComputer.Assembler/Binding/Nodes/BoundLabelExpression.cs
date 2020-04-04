@@ -5,13 +5,13 @@ namespace VComputer.Assembler.Binding
 {
     internal sealed class BoundLabelExpression : BoundExpression
     {
-        public BoundLabelExpression(LabelSymbol labelSymbol)
+        public BoundLabelExpression(LabelSymbol label)
         {
-            LabelSymbol = labelSymbol;
+            Label = label;
         }
 
         public override BoundNodeKind Kind => BoundNodeKind.LabelExpression;
-        public LabelSymbol LabelSymbol { get; }
+        public LabelSymbol Label { get; }
 
         public override IEnumerable<BoundNode> GetChildren() => Enumerable.Empty<BoundNode>();
     }

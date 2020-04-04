@@ -23,11 +23,7 @@ namespace VComputer.Interface
         {
             InitializeApplication();
             var program = ReadProgram(ProgramPath);
-            var newProgram = new int[16];
-            program.CopyTo(newProgram, 0);
-            newProgram[14] = 1;
-
-            await RunComputer(newProgram);
+            await RunComputer(program);
         }
 
         private static void InitializeApplication()

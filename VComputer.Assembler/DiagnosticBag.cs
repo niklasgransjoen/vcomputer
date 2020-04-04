@@ -39,15 +39,27 @@ namespace VComputer.Assembler
             Report(span, message);
         }
 
-        public void ReportInvalidOperand(TextSpan span, string? text)
+        public void ReportInvalidInteger(TextSpan span, string? text)
         {
-            string message = $"The value '{text}' is not a valid operand.";
+            string message = $"The value '{text}' is not a valid integer.";
             Report(span, message);
         }
 
-        public void ReportUndefinedLabel(TextSpan span, string labelName)
+        public void ReportUndefinedSymbol(TextSpan span, string name)
         {
-            string message = $"The label '{labelName}' does not exist.";
+            string message = $"The symbol '{name}' is not defined.";
+            Report(span, message);
+        }
+
+        public void ReportLabelAlreadyDeclared(TextSpan span, string name)
+        {
+            string message = $"A label with the name '{name}' already exists.";
+            Report(span, message);
+        }
+
+        public void ReportConstantAlreadyDeclared(TextSpan span, string name)
+        {
+            string message = $"A constant with the name '{name}' already exists.";
             Report(span, message);
         }
 

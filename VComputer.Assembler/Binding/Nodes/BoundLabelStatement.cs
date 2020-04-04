@@ -3,15 +3,15 @@ using System.Linq;
 
 namespace VComputer.Assembler.Binding
 {
-    internal sealed class BoundLabelStatement : BoundStatement
+    internal sealed class BoundLabelDeclarationStatement : BoundStatement
     {
-        public BoundLabelStatement(LabelSymbol labelSymbol)
+        public BoundLabelDeclarationStatement(LabelSymbol label)
         {
-            LabelSymbol = labelSymbol;
+            Label = label;
         }
 
-        public override BoundNodeKind Kind => BoundNodeKind.LabelStatement;
-        public LabelSymbol LabelSymbol { get; }
+        public override BoundNodeKind Kind => BoundNodeKind.LabelDeclarationStatement;
+        public LabelSymbol Label { get; }
 
         public override IEnumerable<BoundNode> GetChildren() => Enumerable.Empty<BoundNode>();
     }

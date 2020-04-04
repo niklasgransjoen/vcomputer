@@ -32,17 +32,14 @@ namespace VComputer.Assembler.Syntax
         public SyntaxToken Lex()
         {
             _start = _position;
-            _kind = SyntaxKind.BadToken;
             _value = null;
 
-            if (TryLookupTokenKind(out SyntaxKind kind))
-                _kind = kind;
-            else
+            if (!TryLookupTokenKind(out _kind))
             {
                 switch (Current)
                 {
                     case '#':
-                        ReadLineCommentToken();
+                        ReadLineComment();
                         break;
 
                     case '0':
@@ -55,7 +52,7 @@ namespace VComputer.Assembler.Syntax
                     case '7':
                     case '8':
                     case '9':
-                        ReadIntegerToken();
+                        ReadInteger();
                         break;
 
                     case 'A':
@@ -84,24 +81,51 @@ namespace VComputer.Assembler.Syntax
                     case 'X':
                     case 'Y':
                     case 'Z':
-                        ReadCommandToken();
+                        ReadIdentifier();
+                        break;
+
+                    case 'a':
+                    case 'b':
+                    case 'c':
+                    case 'd':
+                    case 'e':
+                    case 'f':
+                    case 'g':
+                    case 'h':
+                    case 'i':
+                    case 'j':
+                    case 'k':
+                    case 'l':
+                    case 'm':
+                    case 'n':
+                    case 'o':
+                    case 'p':
+                    case 'q':
+                    case 'r':
+                    case 's':
+                    case 't':
+                    case 'u':
+                    case 'v':
+                    case 'w':
+                    case 'x':
+                    case 'y':
+                    case 'z':
+                        ReadLabel();
                         break;
 
                     case ' ':
                     case '\t':
-                        ReadWhitespaceToken();
+                        ReadWhitespace();
                         break;
 
                     case '\r':
                     case '\n':
-                        ReadNewLineToken();
+                        ReadNewLine();
                         break;
 
                     default:
                         if (char.IsWhiteSpace(Current))
-                            ReadWhitespaceToken();
-                        else if (char.IsLetter(Current))
-                            ReadLabelToken();
+                            ReadWhitespace();
                         else
                         {
                             Diagnostics.ReportBadCharacter(_position, Current);
@@ -130,13 +154,18 @@ namespace VComputer.Assembler.Syntax
                     syntaxKind = SyntaxKind.EndOfFileToken;
                     return true;
 
+                case '=':
+                    Next();
+                    syntaxKind = SyntaxKind.EqualsToken;
+                    return true;
+
                 default:
-                    syntaxKind = default;
+                    syntaxKind = SyntaxKind.BadToken;
                     return false;
             }
         }
 
-        private void ReadLineCommentToken()
+        private void ReadLineComment()
         {
             do
             {
@@ -147,7 +176,7 @@ namespace VComputer.Assembler.Syntax
             _kind = SyntaxKind.LineCommentToken;
         }
 
-        private void ReadWhitespaceToken()
+        private void ReadWhitespace()
         {
             while (Current == ' ' || Current == '\t')
                 Next();
@@ -155,7 +184,7 @@ namespace VComputer.Assembler.Syntax
             _kind = SyntaxKind.WhitespaceToken;
         }
 
-        private void ReadNewLineToken()
+        private void ReadNewLine()
         {
             while (Current == '\n' || Current == '\r')
                 Next();
@@ -163,7 +192,7 @@ namespace VComputer.Assembler.Syntax
             _kind = SyntaxKind.NewLineToken;
         }
 
-        private void ReadIntegerToken()
+        private void ReadInteger()
         {
             // Keep reading digits as long as they're available,
             while (char.IsLetterOrDigit(Current))
@@ -172,20 +201,21 @@ namespace VComputer.Assembler.Syntax
             }
 
             _kind = SyntaxKind.IntegerToken;
+            _value = _text.SubString(_start, _position - _start);
         }
 
-        private void ReadCommandToken()
+        private void ReadIdentifier()
         {
             do
             {
                 Next();
             }
-            while (char.IsUpper(Current));
+            while (char.IsUpper(Current) || Current == '_');
 
-            _kind = SyntaxKind.CommandToken;
+            _kind = SyntaxKind.IdentifierToken;
         }
 
-        private void ReadLabelToken()
+        private void ReadLabel()
         {
             do
             {

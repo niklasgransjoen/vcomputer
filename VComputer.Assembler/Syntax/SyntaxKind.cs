@@ -6,7 +6,7 @@
 
         BadToken,
         EndOfFileToken,
-        CommandToken,
+        IdentifierToken,
         IntegerToken,
         LabelToken,
         LabelDeclarationToken,
@@ -21,12 +21,14 @@
         // Statements
 
         CommandStatement,
-        OperatorStatement,
-        LabelStatement,
+        LabelDeclarationStatement,
+        ConstantDeclarationStatement,
 
         // Expressions
 
         LiteralExpression,
+        NameExpression,
         LabelExpression,
+        EqualsToken,
     }
 }

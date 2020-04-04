@@ -67,36 +67,58 @@ namespace VComputer.Assembler.Syntax
                     continue;
                 }
 
-                StatementSyntax statement = Current.Kind switch
-                {
-                    SyntaxKind.LabelDeclarationToken => ParseLabelStatement(),
-                    _ => ParseCommandStatement(),
-                };
+                var currentToken = Current;
+
+                StatementSyntax statement = ParseStatement();
                 statements.Add(statement);
+
+                // If no tokens were consumed by the parse call,
+                // we skip past the next newline. Parse errors will
+                // have already been reported.
+                if (currentToken == Current)
+                {
+                    while (Current.Kind != SyntaxKind.EndOfFileToken && Current.Kind != SyntaxKind.NewLineToken)
+                    {
+                        NextToken();
+                    }
+                }
             }
 
             return statements.ToImmutable();
         }
 
+        private StatementSyntax ParseStatement()
+        {
+            return Current.Kind switch
+            {
+                SyntaxKind.LabelDeclarationToken => ParseLabelStatement(),
+                SyntaxKind.IdentifierToken when LookAhead.Kind == SyntaxKind.EqualsToken => ParseConstantDeclarationStatement(),
+                _ => ParseCommandStatement(),
+            };
+        }
+
         private CommandStatement ParseCommandStatement()
         {
-            var operatorStatement = ParseOperatorStatement();
+            var commandToken = MatchToken(SyntaxKind.IdentifierToken);
             var operandExpression = Current.Kind != SyntaxKind.NewLineToken ? ParseExpression() : null;
             var newLineToken = MatchToken(SyntaxKind.NewLineToken);
 
-            return new CommandStatement(operatorStatement, operandExpression, newLineToken);
+            return new CommandStatement(commandToken, operandExpression, newLineToken);
         }
 
-        private OperatorStatement ParseOperatorStatement()
+        private ConstantDeclarationStatement ParseConstantDeclarationStatement()
         {
-            var commandToken = MatchToken(SyntaxKind.CommandToken);
-            return new OperatorStatement(commandToken);
+            var identifer = MatchToken(SyntaxKind.IdentifierToken);
+            var equalsToken = MatchToken(SyntaxKind.EqualsToken);
+            var expression = ParseExpression();
+
+            return new ConstantDeclarationStatement(identifer, equalsToken, expression);
         }
 
-        private LabelStatement ParseLabelStatement()
+        private LabelDeclarationStatement ParseLabelStatement()
         {
             var labelToken = NextToken();
-            return new LabelStatement(labelToken);
+            return new LabelDeclarationStatement(labelToken);
         }
 
         #endregion Statement
@@ -105,10 +127,19 @@ namespace VComputer.Assembler.Syntax
 
         private ExpressionSyntax ParseExpression()
         {
-            if (Current.Kind == SyntaxKind.LabelToken)
-                return ParseLabelExpression();
-            else
-                return ParseLiteralExpression();
+            return Current.Kind switch
+            {
+                SyntaxKind.IdentifierToken => ParseNameExpression(),
+                SyntaxKind.LabelToken => ParseLabelExpression(),
+
+                _ => ParseLiteralExpression(),
+            };
+        }
+
+        private ConstantExpression ParseNameExpression()
+        {
+            var identifier = MatchToken(SyntaxKind.IdentifierToken);
+            return new ConstantExpression(identifier);
         }
 
         private LabelExpression ParseLabelExpression()
@@ -121,7 +152,7 @@ namespace VComputer.Assembler.Syntax
         {
             var operand = MatchToken(SyntaxKind.IntegerToken);
             if (!int.TryParse(operand.Text.Span, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int value))
-                Diagnostics.ReportInvalidOperand(operand.Span, operand.Text.ToString());
+                Diagnostics.ReportInvalidInteger(operand.Span, operand.Text.ToString());
 
             return new LiteralExpression(operand, value);
         }
@@ -153,7 +184,10 @@ namespace VComputer.Assembler.Syntax
                 return NextToken();
 
             Diagnostics.ReportUnexpectedToken(Current.Span, Current.Kind, kind);
-            return new SyntaxToken(kind, Current.Position, default, null);
+
+            var defaultText = SyntaxFacts.GetDefaultTokenText(kind);
+            var defaultValue = SyntaxFacts.GetDefaultTokenValue(kind);
+            return new SyntaxToken(kind, Current.Position, defaultText, defaultValue);
         }
 
         #endregion Helper methods

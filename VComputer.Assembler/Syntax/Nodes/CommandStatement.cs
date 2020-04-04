@@ -6,22 +6,22 @@ namespace VComputer.Assembler.Syntax
     [DebuggerDisplay("{OperatorStatement} {OperandExpression}")]
     internal sealed class CommandStatement : StatementSyntax
     {
-        public CommandStatement(OperatorStatement operatorStatement, ExpressionSyntax? operandExpression, SyntaxToken newLineToken)
+        public CommandStatement(SyntaxToken commandToken, ExpressionSyntax? operandExpression, SyntaxToken newLineToken)
         {
-            OperatorStatement = operatorStatement;
+            CommandToken = commandToken;
             OperandExpression = operandExpression;
             NewLineToken = newLineToken;
         }
 
         public override SyntaxKind Kind => SyntaxKind.CommandStatement;
 
-        public OperatorStatement OperatorStatement { get; }
+        public SyntaxToken CommandToken { get; }
         public ExpressionSyntax? OperandExpression { get; }
         public SyntaxToken NewLineToken { get; }
 
         public override IEnumerable<SyntaxNode> GetChildren()
         {
-            yield return OperatorStatement;
+            yield return CommandToken;
 
             if (OperandExpression != null)
             {

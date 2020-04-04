@@ -5,11 +5,13 @@
         // Statements
 
         CommandStatement,
-        LabelStatement,
+        ConstantDeclarationStatement,
+        LabelDeclarationStatement,
 
         // Expressions
 
         LiteralExpression,
+        ConstantExpression,
         LabelExpression,
         ErrorExpression,
     }
