@@ -80,6 +80,25 @@ Counter out.
 
 Output registry in.
 
+### VComputer.Assembler
+
+An general-purpose asssembler.
+
+The assembler exposes only two classes:
+- VComputer.Assembler.Assembler
+- VComputer.Assembler.AssemblyInstruction
+
+The Assembler class accepts a collection of assembly instructions in its constructor, meaning the assembler can be repurposed for any language definition.
+
+The assembler currently provides support for the following functionality:
+- Commands
+- Labels
+- Constants
+
+Planned functionality includes:
+- Assembly directives
+- Macros
+
 ### VComputer.Interface
 
 This library serves two purposes:
