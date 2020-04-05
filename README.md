@@ -2,6 +2,10 @@
 
 Let's build a computer... with a computer.
 
+Inspired by Ben Eater's series on building an 8-bit computer on breadboards, but without any of the commitment of actually buying breadboards and components. [Youtube playlist of his series](https://www.youtube.com/playlist?list=PLowKtXNTBypGqImE405J2565dvjafglHU).
+
+The whole project is written in C#, and includes the computer logic itself, as well as an assembler, and a simple console interface. The computer is written in a way that attempts to simulate Eater's 8-bit computer as close as possible. This includes not using higher-level concepts where avoidable.
+
 ## Projects
 
 ### VComputer
@@ -95,8 +99,6 @@ The assembler currently provides support for the following functionality:
 - Labels
 - Constants
 - Assembly directives
-
-Planned functionality includes:
 - Macros
 
 Supported assembly directives:
