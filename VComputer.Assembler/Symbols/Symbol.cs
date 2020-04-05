@@ -1,8 +1,8 @@
-﻿namespace VComputer.Assembler.Binding
+﻿namespace VComputer.Assembler.Symbols
 {
-    internal sealed class LabelSymbol
+    internal abstract class Symbol
     {
-        public LabelSymbol(string name)
+        protected Symbol(string name)
         {
             Name = name;
         }

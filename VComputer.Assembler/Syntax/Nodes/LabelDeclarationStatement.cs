@@ -4,18 +4,21 @@ namespace VComputer.Assembler.Syntax
 {
     internal sealed class LabelDeclarationStatement : StatementSyntax
     {
-        public LabelDeclarationStatement(SyntaxToken labelToken)
+        public LabelDeclarationStatement(SyntaxToken identifier, SyntaxToken colonToken)
         {
-            LabelToken = labelToken;
+            Identifier = identifier;
+            ColonToken = colonToken;
         }
 
         public override SyntaxKind Kind => SyntaxKind.LabelDeclarationStatement;
 
-        public SyntaxToken LabelToken { get; }
+        public SyntaxToken Identifier { get; }
+        public SyntaxToken ColonToken { get; }
 
         public override IEnumerable<SyntaxNode> GetChildren()
         {
-            yield return LabelToken;
+            yield return Identifier;
+            yield return ColonToken;
         }
     }
 }

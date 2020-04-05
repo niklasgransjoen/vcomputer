@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
 using VComputer.Assembler.Text;
@@ -91,20 +92,44 @@ namespace VComputer.Assembler.Syntax
         {
             return Current.Kind switch
             {
-                SyntaxKind.LabelDeclarationToken => ParseLabelStatement(),
+                SyntaxKind.DefKeyword => ParseMacroDefinitionStatement(),
+                SyntaxKind.IdentifierToken when LookAhead.Kind == SyntaxKind.ColonToken => ParseLabelDeclarationStatement(),
                 SyntaxKind.IdentifierToken when LookAhead.Kind == SyntaxKind.EqualsToken => ParseConstantDeclarationStatement(),
                 SyntaxKind.DirectiveToken => ParseDirectiveStatement(),
-                _ => ParseCommandStatement(),
+                _ => ParseCommandOrMacroStatement(),
             };
         }
 
-        private CommandStatement ParseCommandStatement()
+        private StatementSyntax ParseCommandOrMacroStatement(bool requireNewline = true)
+        {
+            if (Current.Text.IsEmpty || Current.Text.Span[0] == '_')
+                return ParseMacroStatement(requireNewline);
+            else
+                return ParseCommandStatement(requireNewline);
+        }
+
+        private CommandStatement ParseCommandStatement(bool requireNewline = true)
         {
             var commandToken = MatchToken(SyntaxKind.IdentifierToken);
-            var operandExpression = Current.Kind != SyntaxKind.NewLineToken ? ParseExpression() : null;
-            var newLineToken = MatchToken(SyntaxKind.NewLineToken);
+            var operand = CanParseExpression(Current.Kind) ? ParseExpression() : null;
+            var newLineToken = requireNewline ? MatchToken(SyntaxKind.NewLineToken) : null;
 
-            return new CommandStatement(commandToken, operandExpression, newLineToken);
+            return new CommandStatement(commandToken, operand, newLineToken);
+        }
+
+        private MacroStatement ParseMacroStatement(bool requireNewline = true)
+        {
+            var commandToken = MatchToken(SyntaxKind.IdentifierToken);
+            var operands = ImmutableArray.CreateBuilder<ExpressionSyntax>();
+            while (CanParseExpression(Current.Kind))
+            {
+                var expression = ParseExpression();
+                operands.Add(expression);
+            }
+
+            var newLineToken = requireNewline ? MatchToken(SyntaxKind.NewLineToken) : null;
+
+            return new MacroStatement(commandToken, operands.ToImmutable(), newLineToken);
         }
 
         private DirectiveStatement ParseDirectiveStatement()
@@ -116,10 +141,72 @@ namespace VComputer.Assembler.Syntax
             return new DirectiveStatement(directiveToken, operandExpression, newLineToken);
         }
 
-        private LabelDeclarationStatement ParseLabelStatement()
+        #region MacroDefinitionStatement
+
+        private MacroDefinitionStatement ParseMacroDefinitionStatement()
         {
-            var labelToken = NextToken();
-            return new LabelDeclarationStatement(labelToken);
+            var defKeyword = MatchToken(SyntaxKind.DefKeyword);
+            var identifier = MatchToken(SyntaxKind.IdentifierToken);
+            if (identifier.Text.IsEmpty || identifier.Text.Span[0] != '_')
+                Diagnostics.ReportBadMacroIdentifer(identifier.Span, identifier.Text.ToString());
+
+            var parameters = ParseMacroParameters();
+            var statements = ParseMacroDefinitionStatementBody();
+
+            return new MacroDefinitionStatement(defKeyword, identifier, parameters, statements);
+        }
+
+        private ImmutableArray<SyntaxToken> ParseMacroParameters()
+        {
+            var builder = ImmutableArray.CreateBuilder<SyntaxToken>();
+            while (Current.Kind == SyntaxKind.IdentifierToken)
+            {
+                builder.Add(Current);
+                NextToken();
+            }
+
+            return builder.ToImmutable();
+        }
+
+        private SeparatedStatementCollection<StatementSyntax> ParseMacroDefinitionStatementBody()
+        {
+            // If the macro declaration is empty, escape early.
+            if (Current.Kind != SyntaxKind.SlashSlashToken)
+            {
+                return SeparatedStatementCollection<StatementSyntax>.Empty;
+            }
+
+            var builder = ImmutableArray.CreateBuilder<SyntaxNode>();
+            while (true)
+            {
+                var slashSlashToken = MatchToken(SyntaxKind.SlashSlashToken);
+                var newlineToken = MatchToken(SyntaxKind.NewLineToken);
+
+                builder.Add(slashSlashToken);
+                builder.Add(newlineToken);
+
+                if (Current.Kind != SyntaxKind.IdentifierToken)
+                    return new SeparatedStatementCollection<StatementSyntax>(builder.ToImmutable(), SeparatorOptions.HasLeadingAndTrailingSeparator, separatorCount: 2);
+
+                var statement = ParseCommandOrMacroStatement(requireNewline: false);
+                builder.Add(statement);
+
+                if (Current.Kind != SyntaxKind.SlashSlashToken)
+                    return new SeparatedStatementCollection<StatementSyntax>(builder.ToImmutable(), SeparatorOptions.HasLeadingSeparator, separatorCount: 2);
+            }
+        }
+
+        #endregion MacroDefinitionStatement
+
+        private LabelDeclarationStatement ParseLabelDeclarationStatement()
+        {
+            var labelToken = MatchToken(SyntaxKind.IdentifierToken);
+            if (labelToken.Text.IsEmpty || !char.IsLower(labelToken.Text.Span[0]))
+                Diagnostics.ReportBadLabelIdentifier(labelToken.Span, labelToken.Text.ToString());
+
+            var colonToken = MatchToken(SyntaxKind.ColonToken);
+
+            return new LabelDeclarationStatement(labelToken, colonToken);
         }
 
         private ConstantDeclarationStatement ParseConstantDeclarationStatement()
@@ -135,27 +222,26 @@ namespace VComputer.Assembler.Syntax
 
         #region Expression
 
+        private bool CanParseExpression(SyntaxKind kind) => kind switch
+        {
+            SyntaxKind.IntegerToken => true,
+            SyntaxKind.IdentifierToken => true,
+            _ => false,
+        };
+
         private ExpressionSyntax ParseExpression()
         {
             return Current.Kind switch
             {
-                SyntaxKind.IdentifierToken => ParseNameExpression(),
-                SyntaxKind.LabelToken => ParseLabelExpression(),
-
-                _ => ParseLiteralExpression(),
+                SyntaxKind.IntegerToken => ParseLiteralExpression(),
+                _ => ParseNameExpression(),
             };
         }
 
-        private ConstantExpression ParseNameExpression()
+        private NameExpression ParseNameExpression()
         {
             var identifier = MatchToken(SyntaxKind.IdentifierToken);
-            return new ConstantExpression(identifier);
-        }
-
-        private LabelExpression ParseLabelExpression()
-        {
-            var label = MatchToken(SyntaxKind.LabelToken);
-            return new LabelExpression(label);
+            return new NameExpression(identifier);
         }
 
         private LiteralExpression ParseLiteralExpression()
@@ -195,8 +281,8 @@ namespace VComputer.Assembler.Syntax
 
             Diagnostics.ReportUnexpectedToken(Current.Span, Current.Kind, kind);
 
-            var defaultText = SyntaxFacts.GetDefaultTokenText(kind);
-            var defaultValue = SyntaxFacts.GetDefaultTokenValue(kind);
+            var defaultText = kind.GetDefaultTokenText().AsMemory();
+            var defaultValue = kind.GetDefaultTokenValue();
             return new SyntaxToken(kind, Current.Position, defaultText, defaultValue);
         }
 

@@ -4,47 +4,20 @@ namespace VComputer.Assembler.Syntax
 {
     public static class SyntaxFacts
     {
-        public static SyntaxKind GetKeywordKind(string word)
+        public static bool TryGetKeywordKind(string word, out SyntaxKind syntaxKind)
         {
-            return word switch
+            switch (word)
             {
-                _ => SyntaxKind.IdentifierToken,
-            };
+                case "def":
+                    syntaxKind = SyntaxKind.DefKeyword;
+                    return true;
+
+                default:
+                    syntaxKind = default;
+                    return false;
+            }
         }
 
-        public static bool TryGetText(SyntaxKind kind, out ReadOnlyMemory<char> text)
-        {
-            text = kind switch
-            {
-                _ => default,
-            };
-            return !text.IsEmpty;
-        }
-
-        public static ReadOnlyMemory<char> GetDefaultTokenText(SyntaxKind kind) => (kind switch
-        {
-            SyntaxKind.EndOfFileToken => "\0",
-            SyntaxKind.IdentifierToken => string.Empty,
-            SyntaxKind.IntegerToken => "0",
-            SyntaxKind.LabelToken => string.Empty,
-            SyntaxKind.LabelDeclarationToken => ":",
-            SyntaxKind.WhitespaceToken => " ",
-            SyntaxKind.NewLineToken => "\n",
-            SyntaxKind.LineCommentToken => "#",
-
-            _ => default,
-        }).AsMemory();
-
-        public static object? GetDefaultTokenValue(SyntaxKind kind)
-        {
-            return kind switch
-            {
-                SyntaxKind.IntegerToken => "0",
-                SyntaxKind.LabelToken => string.Empty,
-                SyntaxKind.LabelDeclarationToken => ":",
-
-                _ => null,
-            };
-        }
+       
     }
 }

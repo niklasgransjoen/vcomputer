@@ -2,9 +2,9 @@
 
 namespace VComputer.Assembler.Syntax
 {
-    internal sealed class ConstantExpression : ExpressionSyntax
+    internal sealed class NameExpression : ExpressionSyntax
     {
-        public ConstantExpression(SyntaxToken identifier)
+        public NameExpression(SyntaxToken identifier)
         {
             Identifier = identifier;
         }

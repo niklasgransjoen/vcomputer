@@ -1,4 +1,5 @@
-﻿using VComputer.Assembler.Text;
+﻿using System;
+using VComputer.Assembler.Text;
 
 namespace VComputer.Assembler.Syntax
 {
@@ -110,7 +111,11 @@ namespace VComputer.Assembler.Syntax
                     case 'x':
                     case 'y':
                     case 'z':
-                        ReadLabel();
+                        ReadLabelOrKeyword();
+                        break;
+
+                    case '_':
+                        ReadMacroIdentifier();
                         break;
 
                     case '.':
@@ -134,12 +139,18 @@ namespace VComputer.Assembler.Syntax
                         {
                             Diagnostics.ReportBadCharacter(_position, Current);
                             Next();
+                            _kind = SyntaxKind.BadToken;
                         }
                         break;
                 }
             }
 
-            if (!SyntaxFacts.TryGetText(_kind, out var text))
+            ReadOnlyMemory<char> text;
+            if (_kind.TryGetText(out string? syntaxText))
+            {
+                text = syntaxText.AsMemory();
+            }
+            else
             {
                 int length = _position - _start;
                 text = _text.SubString(_start, length);
@@ -163,8 +174,18 @@ namespace VComputer.Assembler.Syntax
                     syntaxKind = SyntaxKind.EqualsToken;
                     return true;
 
+                case ':':
+                    Next();
+                    syntaxKind = SyntaxKind.ColonToken;
+                    return true;
+
+                case '/' when LookAhead == '/':
+                    Next(2);
+                    syntaxKind = SyntaxKind.SlashSlashToken;
+                    return true;
+
                 default:
-                    syntaxKind = SyntaxKind.BadToken;
+                    syntaxKind = default;
                     return false;
             }
         }
@@ -222,26 +243,41 @@ namespace VComputer.Assembler.Syntax
             }
             while (char.IsUpper(Current) || Current == '_');
 
+            _value = _text.SubString(_start, _position - _start);
             _kind = SyntaxKind.IdentifierToken;
         }
 
-        private void ReadLabel()
+        private void ReadLabelOrKeyword()
         {
             do
             {
                 Next();
             }
-            while (char.IsLower(Current));
-            _value = _text.SubString(_start, _position - _start);
+            while (char.IsLetterOrDigit(Current) || Current == '_');
 
-            if (Match(':'))
+            var text = _text.SubString(_start, _position - _start).ToString();
+            if (SyntaxFacts.TryGetKeywordKind(text, out _kind))
             {
-                _kind = SyntaxKind.LabelDeclarationToken;
+                // Token is a keyword
             }
             else
             {
-                _kind = SyntaxKind.LabelToken;
+                // Token is a label.
+                _kind = SyntaxKind.IdentifierToken;
             }
+        }
+
+        private void ReadMacroIdentifier()
+        {
+            do
+            {
+                Next();
+            } while (char.IsLetterOrDigit(Current) || Current == '_');
+            var nameWithoutUnderscore = _text.SubString(_start + 1, _position - _start);
+            if (nameWithoutUnderscore.IsEmpty)
+                Diagnostics.ReportBadMacroIdentifer(TextSpan.FromBounds(_start, _position), "_");
+
+            _kind = SyntaxKind.IdentifierToken;
         }
 
         private void ReadDirective()
@@ -267,9 +303,9 @@ namespace VComputer.Assembler.Syntax
             return _text[index];
         }
 
-        private void Next()
+        private void Next(int increment = 1)
         {
-            _position++;
+            _position += increment;
         }
 
         private bool Match(char expected)

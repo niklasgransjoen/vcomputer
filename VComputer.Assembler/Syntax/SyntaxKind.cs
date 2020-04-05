@@ -1,4 +1,6 @@
-﻿namespace VComputer.Assembler.Syntax
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace VComputer.Assembler.Syntax
 {
     public enum SyntaxKind
     {
@@ -8,13 +10,17 @@
         EndOfFileToken,
         IdentifierToken,
         DirectiveToken,
-        LabelToken,
-        LabelDeclarationToken,
         IntegerToken,
         EqualsToken,
+        ColonToken,
+        SlashSlashToken,
         WhitespaceToken,
         NewLineToken,
         LineCommentToken,
+
+        // Keywords
+
+        DefKeyword,
 
         // Compilation
 
@@ -23,7 +29,9 @@
         // Statements
 
         CommandStatement,
+        MacroStatement,
         DirectiveStatement,
+        MacroDefinitionStatement,
         LabelDeclarationStatement,
         ConstantDeclarationStatement,
 
@@ -31,6 +39,48 @@
 
         LiteralExpression,
         NameExpression,
-        LabelExpression,
+    }
+
+    public static class SyntaxKindExtensions
+    {
+        public static bool TryGetText(this SyntaxKind kind, [NotNullWhen(true)] out string? text)
+        {
+            text = kind switch
+            {
+                SyntaxKind.DefKeyword => "def",
+                _ => null,
+            };
+            return text != null;
+        }
+
+        public static string GetDefaultTokenText(this SyntaxKind kind) => kind switch
+        {
+            SyntaxKind.EndOfFileToken => "\0",
+            SyntaxKind.IdentifierToken => string.Empty,
+            SyntaxKind.DirectiveToken => ".",
+            SyntaxKind.IntegerToken => "0",
+            SyntaxKind.EqualsToken => "=",
+            SyntaxKind.ColonToken => ":",
+            SyntaxKind.SlashSlashToken => "//",
+            SyntaxKind.WhitespaceToken => " ",
+            SyntaxKind.NewLineToken => "\n",
+            SyntaxKind.LineCommentToken => "#",
+
+            _ => string.Empty,
+        };
+
+        public static object? GetDefaultTokenValue(this SyntaxKind kind) => kind switch
+        {
+            SyntaxKind.IntegerToken => "0",
+            _ => null,
+        };
+
+        public static bool IsExpression(this SyntaxKind kind) => kind switch
+        {
+            SyntaxKind.LiteralExpression => true,
+            SyntaxKind.NameExpression => true,
+
+            _ => false,
+        };
     }
 }

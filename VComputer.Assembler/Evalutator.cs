@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using VComputer.Assembler.Binding;
+using VComputer.Assembler.Extensions;
+using VComputer.Assembler.Symbols;
 
 namespace VComputer.Assembler
 {
@@ -10,9 +12,10 @@ namespace VComputer.Assembler
         private readonly BoundCompilationUnit _compilationUnit;
         private readonly int _bits;
 
-        private readonly Dictionary<LabelSymbol, int> _labelAddresses;
-        private readonly Dictionary<ConstantSymbol, int> _constantValues;
+        private readonly Dictionary<MacroSymbol, BoundMacroDeclarationStatement> _macros = new Dictionary<MacroSymbol, BoundMacroDeclarationStatement>();
+        private readonly Dictionary<Symbol, int> _globalSymbols = new Dictionary<Symbol, int>();
 
+        private readonly int[] _code;
         private int _locationPointer = 0;
 
         #region Constructor
@@ -22,43 +25,44 @@ namespace VComputer.Assembler
             _compilationUnit = compilationUnit;
             _bits = bits;
 
-            _labelAddresses = CreateLabelAddressMappings(compilationUnit.Statements);
-            _constantValues = InitializeConstantValues();
+            InitializeSymbols();
+            _code = new int[CalculateProgramSize()];
         }
 
-        private static Dictionary<LabelSymbol, int> CreateLabelAddressMappings(IEnumerable<BoundStatement> statements)
+        private void InitializeSymbols()
         {
-            var labelAddresses = new Dictionary<LabelSymbol, int>();
+            var symbols = new Dictionary<Symbol, int>();
 
-            int address = 0;
-            foreach (var statement in statements)
+            // Macros
+            var macroDeclarations = _compilationUnit.Statements
+                .Where(s => s.Kind == BoundNodeKind.MacroDeclarationStatement)
+                .Cast<BoundMacroDeclarationStatement>();
+            _macros.AddRange(macroDeclarations.ToDictionary(m => m.Macro));
+
+            // Constants
+            var constantDeclarations = _compilationUnit.Statements
+                .Where(s => s.Kind == BoundNodeKind.ConstantDeclarationStatement)
+                .Cast<BoundConstantDeclarationStatement>();
+            foreach (var constantDeclaration in constantDeclarations)
+            {
+                int value = EvaluateExpression(constantDeclaration.Expression);
+                _globalSymbols.Add(constantDeclaration.Constant, value);
+            }
+
+            // Labels
+            int labelAddress = 0;
+            foreach (var statement in _compilationUnit.Statements)
             {
                 if (statement.Kind == BoundNodeKind.LabelDeclarationStatement)
                 {
                     var labelStatement = (BoundLabelDeclarationStatement)statement;
-                    labelAddresses.Add(labelStatement.Label, address);
+                    _globalSymbols.Add(labelStatement.Label, labelAddress);
                 }
-                else if (statement.Kind == BoundNodeKind.CommandStatement)
+                else
                 {
-                    address++;
+                    labelAddress += CalculateSize(statement);
                 }
             }
-
-            return labelAddresses;
-        }
-
-        private Dictionary<ConstantSymbol, int> InitializeConstantValues()
-        {
-            var constantValues = new Dictionary<ConstantSymbol, int>();
-
-            var constantDeclarationStatements = _compilationUnit.Statements.Where(s => s.Kind == BoundNodeKind.ConstantDeclarationStatement);
-            foreach (BoundConstantDeclarationStatement constantDeclaration in constantDeclarationStatements)
-            {
-                int value = EvaluateExpression(constantDeclaration.Expression);
-                constantValues.Add(constantDeclaration.Constant, value);
-            }
-
-            return constantValues;
         }
 
         #endregion Constructor
@@ -66,84 +70,102 @@ namespace VComputer.Assembler
         public static int[] Evaluate(BoundCompilationUnit compilationUnit, int bits)
         {
             var evaluator = new Evalutator(compilationUnit, bits);
-            return evaluator.Evaluate();
-        }
+            evaluator.EvaluateStatements(compilationUnit.Statements);
 
-        private int[] Evaluate()
-        {
-            int[] code = new int[CalculateProgramSize(_compilationUnit.Statements)];
-
-            foreach (var statement in _compilationUnit.Statements)
-            {
-                if (EvaluateStatement(statement, out int result))
-                {
-                    code[_locationPointer] = result;
-                    _locationPointer++;
-                }
-            }
-
-            return code;
+            return evaluator._code;
         }
 
         #region Statement
 
-        private bool EvaluateStatement(BoundStatement statement, out int result)
+        private void EvaluateStatements(IEnumerable<BoundStatement> statements, IReadOnlyDictionary<Symbol, int>? localSymbols = null)
         {
-            return statement.Kind switch
+            foreach (var statement in statements)
             {
-                BoundNodeKind.CommandStatement => EvaluateCommandStatement((BoundCommandStatement)statement, out result),
-                BoundNodeKind.DirectiveStatement => EvaluateDirectiveStatement((BoundDirectiveStatement)statement, out result),
-                BoundNodeKind.ConstantDeclarationStatement => EvaluateNoOpStatement(out result),
-                BoundNodeKind.LabelDeclarationStatement => EvaluateNoOpStatement(out result),
-
-                _ => throw new Exception($"Unexpected syntax '{statement.Kind}'."),
-            };
+                EvaluateStatement(statement, localSymbols);
+            }
         }
 
-        private bool EvaluateCommandStatement(BoundCommandStatement statement, out int result)
+        private void EvaluateStatement(BoundStatement statement, IReadOnlyDictionary<Symbol, int>? localSymbols = null)
         {
-            result = statement.OpCode << _bits / 2;
+            switch (statement.Kind)
+            {
+                case BoundNodeKind.CommandStatement:
+                    EvaluateCommandStatement((BoundCommandStatement)statement, localSymbols);
+                    break;
+
+                case BoundNodeKind.MacroStatement:
+                    EvaluateMacroStatement((BoundMacroStatement)statement, localSymbols);
+                    break;
+
+                case BoundNodeKind.DirectiveStatement:
+                    EvaluateDirectiveStatement((BoundDirectiveStatement)statement, localSymbols);
+                    break;
+
+                case BoundNodeKind.MacroDeclarationStatement:
+                case BoundNodeKind.ConstantDeclarationStatement:
+                case BoundNodeKind.LabelDeclarationStatement:
+                    break;
+
+                default:
+                    throw new Exception($"Unexpected syntax '{statement.Kind}'.");
+            }
+        }
+
+        private void EvaluateCommandStatement(BoundCommandStatement statement, IReadOnlyDictionary<Symbol, int>? localSymbols = null)
+        {
+            var value = statement.OpCode << _bits / 2;
             if (statement.Operand != null)
             {
-                result += EvaluateExpression(statement.Operand);
+                value += EvaluateExpression(statement.Operand, localSymbols);
             }
 
-            return true;
+            PushValue(value);
         }
 
-        private bool EvaluateDirectiveStatement(BoundDirectiveStatement statement, out int result)
+        private void EvaluateMacroStatement(BoundMacroStatement statement, IReadOnlyDictionary<Symbol, int>? localSymbols = null)
         {
-            if (statement.Directive == Directive.ORG)
-            {
-                _locationPointer = EvaluateExpression(statement.Operand!);
-            }
-            else if (statement.Directive == Directive.WORD)
-            {
-                result = EvaluateExpression(statement.Operand!);
-                return true;
-            }
+            var macro = _macros[statement.Macro];
+            var parameters = evaluateParameters();
 
-            result = 0;
-            return false;
+            EvaluateStatements(macro.Statements, parameters);
+
+            Dictionary<Symbol, int> evaluateParameters()
+            {
+                var parameters = new Dictionary<Symbol, int>();
+                for (int i = 0; i < macro.Parameters.Length; i++)
+                {
+                    var parameterSymbol = macro.Parameters[i];
+                    var parameterValue = EvaluateExpression(statement.Operands[i], localSymbols);
+                    parameters.Add(parameterSymbol, parameterValue);
+                }
+
+                return parameters;
+            }
         }
 
-        private bool EvaluateNoOpStatement(out int result)
+        private void EvaluateDirectiveStatement(BoundDirectiveStatement statement, IReadOnlyDictionary<Symbol, int>? localSymbols = null)
         {
-            result = 0;
-            return false;
+            if (statement.Directive == DirectiveSymbol.ORG)
+            {
+                _locationPointer = EvaluateExpression(statement.Operand!, localSymbols);
+            }
+            else if (statement.Directive == DirectiveSymbol.WORD)
+            {
+                var value = EvaluateExpression(statement.Operand!, localSymbols);
+                PushValue(value);
+            }
         }
 
         #endregion Statement
 
         #region Expression
 
-        private int EvaluateExpression(BoundExpression expression)
+        private int EvaluateExpression(BoundExpression expression, IReadOnlyDictionary<Symbol, int>? localSymbols = null)
         {
             return expression.Kind switch
             {
                 BoundNodeKind.LiteralExpression => EvaluateLiteralExpression((BoundLiteralExpression)expression),
-                BoundNodeKind.ConstantExpression => EvaluateConstantExpression((BoundConstantExpression)expression),
-                BoundNodeKind.LabelExpression => EvaluateLabelExpression((BoundLabelExpression)expression),
+                BoundNodeKind.SymbolExpression => EvaluateLabelExpression((BoundSymbolExpression)expression, localSymbols),
 
                 _ => throw new Exception($"Unexpected syntax '{expression.Kind}'."),
             };
@@ -151,40 +173,33 @@ namespace VComputer.Assembler
 
         private int EvaluateLiteralExpression(BoundLiteralExpression expression) => expression.Value;
 
-        private int EvaluateConstantExpression(BoundConstantExpression expression)
+        private int EvaluateLabelExpression(BoundSymbolExpression expression, IReadOnlyDictionary<Symbol, int>? localSymbols = null)
         {
-            return _constantValues[expression.Constant];
-        }
+            if (localSymbols != null && localSymbols.TryGetValue(expression.Symbol, out var value))
+                return value;
 
-        private int EvaluateLabelExpression(BoundLabelExpression expression)
-        {
-            return _labelAddresses[expression.Label];
+            return _globalSymbols[expression.Symbol];
         }
 
         #endregion Expression
 
-        #region Utilities
+        #region Helpers
 
-        private int CalculateProgramSize(IEnumerable<BoundStatement> statements)
+        private int CalculateProgramSize()
         {
             int programSize = 0;
             int maxProgramSize = 0;
 
-            foreach (var statement in statements)
+            foreach (var statement in _compilationUnit.Statements)
             {
-                if (statement.Kind == BoundNodeKind.CommandStatement)
-                    programSize++;
-                else if (statement.Kind == BoundNodeKind.DirectiveStatement)
+                programSize += CalculateSize(statement);
+                if (statement.Kind == BoundNodeKind.DirectiveStatement)
                 {
                     var directiveStatement = (BoundDirectiveStatement)statement;
-                    if (directiveStatement.Directive == Directive.ORG)
+                    if (directiveStatement.Directive == DirectiveSymbol.ORG)
                     {
                         maxProgramSize = Math.Max(programSize, maxProgramSize);
                         programSize = EvaluateExpression(directiveStatement.Operand!);
-                    }
-                    else if (directiveStatement.Directive == Directive.WORD)
-                    {
-                        programSize++;
                     }
                 }
             }
@@ -192,6 +207,35 @@ namespace VComputer.Assembler
             return Math.Max(programSize, maxProgramSize);
         }
 
-        #endregion Utilities
+        private int CalculateSize(BoundStatement statement)
+        {
+            switch (statement.Kind)
+            {
+                case BoundNodeKind.CommandStatement:
+                    return 1;
+
+                case BoundNodeKind.MacroStatement:
+                    var macroStatement = (BoundMacroStatement)statement;
+                    return _macros[macroStatement.Macro].Statements.Sum(statement => CalculateSize(statement));
+
+                case BoundNodeKind.DirectiveStatement when
+                    statement is BoundDirectiveStatement directiveStatement &&
+                    directiveStatement.Directive == DirectiveSymbol.WORD:
+                    {
+                        return 1;
+                    }
+
+                default:
+                    return 0;
+            }
+        }
+
+        private void PushValue(int value)
+        {
+            _code[_locationPointer] = value;
+            _locationPointer++;
+        }
+
+        #endregion Helpers
     }
 }

@@ -5,15 +5,16 @@
         // Statements
 
         CommandStatement,
+        MacroStatement,
         DirectiveStatement,
+        MacroDeclarationStatement,
         ConstantDeclarationStatement,
         LabelDeclarationStatement,
 
         // Expressions
 
         LiteralExpression,
-        ConstantExpression,
-        LabelExpression,
+        SymbolExpression,
         ErrorExpression,
     }
 }

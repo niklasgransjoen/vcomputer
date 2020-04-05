@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace VComputer.Assembler.Binding
 {
+    [DebuggerDisplay("{OpCode} {Operand}")]
     internal sealed class BoundCommandStatement : BoundStatement
     {
         public BoundCommandStatement(int opCode, BoundExpression? operand)

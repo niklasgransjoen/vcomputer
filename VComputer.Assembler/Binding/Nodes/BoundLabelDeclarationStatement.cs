@@ -1,8 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using VComputer.Assembler.Symbols;
 
 namespace VComputer.Assembler.Binding
 {
+    [DebuggerDisplay("{Label}")]
     internal sealed class BoundLabelDeclarationStatement : BoundStatement
     {
         public BoundLabelDeclarationStatement(LabelSymbol label)

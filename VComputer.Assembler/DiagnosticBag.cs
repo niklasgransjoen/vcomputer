@@ -33,6 +33,18 @@ namespace VComputer.Assembler
             Report(span, message);
         }
 
+        public void ReportBadLabelIdentifier(TextSpan span, string identifier)
+        {
+            string message = $"'{identifier}' is not a valid label identifier.";
+            Report(span, message);
+        }
+
+        public void ReportBadMacroIdentifer(TextSpan span, string identifier)
+        {
+            string message = $"'{identifier}' is not a valid macro identifier.";
+            Report(span, message);
+        }
+
         public void ReportUnexpectedToken(TextSpan span, SyntaxKind actualKind, SyntaxKind expectedKind)
         {
             string message = $"Unexpected token <{actualKind}>, expected <{expectedKind}>";
@@ -51,9 +63,15 @@ namespace VComputer.Assembler
             Report(span, message);
         }
 
-        public void ReportLabelAlreadyDeclared(TextSpan span, string name)
+        public void ReportMacroAlreadyDeclared(TextSpan span, string name)
         {
-            string message = $"A label with the name '{name}' already exists.";
+            string message = $"A macro with the name '{name}' already exists.";
+            Report(span, message);
+        }
+
+        public void ReportDuplicateMacroParameter(TextSpan span, string name)
+        {
+            string message = $"A parameter with the name '{name}' already exists.";
             Report(span, message);
         }
 
@@ -63,15 +81,21 @@ namespace VComputer.Assembler
             Report(span, message);
         }
 
-        public void ReportUndefinedCommand(TextSpan span, string command)
+        public void ReportLabelAlreadyDeclared(TextSpan span, string name)
         {
-            string message = $"The command '{command}' does not exist.";
+            string message = $"A label with the name '{name}' already exists.";
+            Report(span, message);
+        }
+
+        public void ReportUndefinedCommandOrMacro(TextSpan span, string name)
+        {
+            string message = $"The command or macro '{name}' does not exist.";
             Report(span, message);
         }
 
         public void ReportBadDirective(TextSpan span, string name)
         {
-            string message = $"Directive .'{name}' does not exist.";
+            string message = $"Directive '{name}' does not exist.";
             Report(span, message);
         }
 
