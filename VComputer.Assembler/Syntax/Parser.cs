@@ -222,7 +222,7 @@ namespace VComputer.Assembler.Syntax
 
         #region Expression
 
-        private bool CanParseExpression(SyntaxKind kind) => kind switch
+        private static bool CanParseExpression(SyntaxKind kind) => kind switch
         {
             SyntaxKind.IntegerToken => true,
             SyntaxKind.IdentifierToken => true,
