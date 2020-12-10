@@ -4,7 +4,7 @@ using VComputer.Services;
 
 namespace VComputer.Timers
 {
-    public sealed class DefaultTimer : ITimer
+    internal sealed class DefaultTimer : ITimer
     {
         private readonly Timer _timer;
         private int _interval;
@@ -17,6 +17,7 @@ namespace VComputer.Timers
 
         public void Dispose()
         {
+            _disposed = true;
             _timer.Dispose();
         }
 

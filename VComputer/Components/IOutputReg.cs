@@ -7,9 +7,4 @@
     {
         bool Input { get; set; }
     }
-
-    public interface IDebugger
-    {
-        string Info { get; set; }
-    }
 }

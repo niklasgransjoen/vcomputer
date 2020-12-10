@@ -4,7 +4,7 @@ using System.Text;
 
 namespace VComputer.Assembler.Extensions
 {
-    public static class IDictionaryExtensions
+    internal static class IDictionaryExtensions
     {
         public static void AddRange<TKey1, TValue1, TKey2, TValue2>(
             this IDictionary<TKey1, TValue1> d1,

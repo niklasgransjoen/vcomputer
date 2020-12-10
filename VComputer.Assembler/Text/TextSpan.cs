@@ -11,7 +11,7 @@ namespace VComputer.Assembler.Text
     {
         #region Constructors
 
-        public TextSpan(int start, int length)
+        internal TextSpan(int start, int length)
         {
             Start = start;
             Length = length;

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace VComputer.Components
 {
@@ -9,11 +10,11 @@ namespace VComputer.Components
     {
         private readonly List<ClockAction> _clockActions = new List<ClockAction>();
 
-        public ClockConnector()
+        internal ClockConnector()
         {
         }
 
-        public IReadOnlyList<ClockAction> ClockActions => _clockActions.AsReadOnly();
+        internal ImmutableArray<ClockAction> ClockActions => _clockActions.ToImmutableArray();
 
         /// <summary>
         /// Adds action that's executed on the rising edge.

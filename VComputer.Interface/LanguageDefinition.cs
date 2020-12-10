@@ -5,7 +5,7 @@ using VComputer.Assembler;
 
 namespace VComputer.Interface
 {
-    public static class LanguageDefinition
+    internal static class LanguageDefinition
     {
         public static ImmutableArray<Instruction> InstructionDefinition { get; }
         public static ImmutableArray<AssemblyInstruction> AssemblyDefinition { get; }
@@ -126,7 +126,7 @@ namespace VComputer.Interface
         }
     }
 
-    public enum OpCode
+    internal enum OpCode
     {
         NOP = 0x0,
         LDA = 0x1,

@@ -1,6 +1,6 @@
 ﻿namespace VComputer.Util
 {
-    public static class ConfigurationUtil
+    internal static class ConfigurationUtil
     {
         public static void AssertBitCount(int expectedBits, int actualBits)
         {

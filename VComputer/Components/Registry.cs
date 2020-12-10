@@ -3,12 +3,12 @@ using VComputer.Util;
 
 namespace VComputer.Components
 {
-    public interface IRegistry : IComponent
+    internal interface IRegistry : IComponent
     {
         ReadOnlyMemory<bool> Values { get; }
     }
 
-    public abstract class Registry : BaseComponent, IRegistry
+    internal abstract class Registry : BaseComponent, IRegistry
     {
         private readonly int _bits;
         private readonly bool[] _values;
@@ -50,21 +50,21 @@ namespace VComputer.Components
         #endregion Callbacks
     }
 
-    public sealed class RegA : Registry
+    internal sealed class RegA : Registry
     {
         public RegA(int bits) : base(bits)
         {
         }
     }
 
-    public sealed class RegB : Registry
+    internal sealed class RegB : Registry
     {
         public RegB(int bits) : base(bits)
         {
         }
     }
 
-    public sealed class InstructionReg : Registry
+    internal sealed class InstructionReg : Registry
     {
         private readonly Memory<bool> _blanker;
         private readonly int _bits;

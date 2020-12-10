@@ -6,7 +6,7 @@ namespace VComputer.Assembler
 {
     public sealed class AssemblyDiagnosticException : Exception
     {
-        internal AssemblyDiagnosticException(SourceText text, ImmutableArray<Diagnostic> diagnostics)
+        public AssemblyDiagnosticException(SourceText text, ImmutableArray<Diagnostic> diagnostics)
         {
             Text = text;
             Diagnostics = diagnostics;

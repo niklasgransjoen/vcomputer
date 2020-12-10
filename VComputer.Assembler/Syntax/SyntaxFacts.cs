@@ -2,7 +2,7 @@
 
 namespace VComputer.Assembler.Syntax
 {
-    public static class SyntaxFacts
+    internal static class SyntaxFacts
     {
         public static bool TryGetKeywordKind(string word, out SyntaxKind syntaxKind)
         {

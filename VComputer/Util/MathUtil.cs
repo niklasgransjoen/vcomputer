@@ -6,7 +6,7 @@ namespace VComputer.Util
     /// <summary>
     /// Collection of primitive math utilities.
     /// </summary>
-    public static class MathUtil
+    internal static class MathUtil
     {
         private static readonly IDictionary<int, int> _powerTable = new Dictionary<int, int>();
 

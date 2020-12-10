@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace VComputer.Interface
 {
-    public sealed class InputHandler
+    internal sealed class InputHandler
     {
         private const double ClockIntervalStep = 1.1d;
 

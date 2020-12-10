@@ -15,6 +15,9 @@ namespace VComputer.Util
         /// </summary>
         public static int ToInt(bool[] memory)
         {
+            if (memory is null)
+                throw new ArgumentNullException(nameof(memory));
+
             int result = 0;
 
             int maxVal = memory.Length - 1;
@@ -72,6 +75,9 @@ namespace VComputer.Util
         /// </summary>
         public static string ToString(bool[] memory)
         {
+            if (memory is null)
+                throw new ArgumentNullException(nameof(memory));
+
             if (memory.Length == 0)
                 return string.Empty;
 

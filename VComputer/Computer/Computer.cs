@@ -16,6 +16,9 @@ namespace VComputer
 
         public Computer(ComputerDefinition definition)
         {
+            if (definition is null)
+                throw new ArgumentNullException(nameof(definition));
+
             if (definition.Timer is null)
                 throw new ArgumentException("A timer is required to create a computer.");
 

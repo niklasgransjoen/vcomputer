@@ -2,7 +2,7 @@
 
 namespace VComputer.Components
 {
-    public sealed class RAMController : BaseComponent
+    internal sealed class RAMController : BaseComponent
     {
         private readonly RAM _ram;
 

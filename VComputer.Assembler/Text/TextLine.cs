@@ -2,7 +2,7 @@
 {
     public sealed class TextLine
     {
-        public TextLine(SourceText text, int start, int length, int lengthIncludingLineBreak)
+        internal TextLine(SourceText text, int start, int length, int lengthIncludingLineBreak)
         {
             Text = text;
             Start = start;

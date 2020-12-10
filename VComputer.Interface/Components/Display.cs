@@ -5,7 +5,7 @@ using VComputer.Util;
 
 namespace VComputer.Interface.Components
 {
-    public sealed class Display : BaseComponent, IOutputReg
+    internal sealed class Display : BaseComponent, IOutputReg
     {
         public Display()
         {

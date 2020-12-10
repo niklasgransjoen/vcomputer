@@ -2,9 +2,9 @@
 
 namespace VComputer.Components
 {
-    public sealed class ProgramCounter : BaseComponent
+    internal sealed class ProgramCounter : BaseComponent
     {
-        public ProgramCounter()
+        internal ProgramCounter()
         {
         }
 

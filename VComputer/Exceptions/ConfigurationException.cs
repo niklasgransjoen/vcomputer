@@ -2,7 +2,7 @@
 
 namespace VComputer
 {
-    public sealed class ConfigurationException : Exception
+    internal sealed class ConfigurationException : Exception
     {
         public ConfigurationException()
         {

@@ -10,7 +10,7 @@ namespace VComputer.Interface.Timers
     /// <summary>
     /// A timer based on the multimedia timer API with 1ms precision.
     /// </summary>
-    public sealed class MultimediaTimer : ITimer
+    internal sealed class MultimediaTimer : ITimer
     {
         private const int EventTypeSingle = 0;
         private const int EventTypePeriodic = 1;
@@ -196,9 +196,9 @@ namespace VComputer.Interface.Timers
         private const string DLL = "winmm.dll";
 
         [DllImport(DLL, SetLastError = true, EntryPoint = "timeSetEvent")]
-        internal static extern uint TimeSetEvent(uint msDelay, uint msResolution, MultimediaTimerCallback callback, ref uint userCtx, uint eventType);
+        public static extern uint TimeSetEvent(uint msDelay, uint msResolution, MultimediaTimerCallback callback, ref uint userCtx, uint eventType);
 
         [DllImport(DLL, SetLastError = true, EntryPoint = "timeKillEvent")]
-        internal static extern void TimeKillEvent(uint uTimerId);
+        public static extern void TimeKillEvent(uint uTimerId);
     }
 }

@@ -4,7 +4,7 @@ using VComputer.Interface.Helpers;
 
 namespace VComputer.Interface.Components
 {
-    public sealed class Debugger : IDebugger
+    internal sealed class Debugger : IDebugger
     {
         public Debugger()
         {

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Immutable;
-using VComputer.Assembler.Symbols;
 
 namespace VComputer.Assembler.Binding
 {

@@ -2,7 +2,7 @@
 
 namespace VComputer.Assembler.Syntax
 {
-    public enum SyntaxKind
+    internal enum SyntaxKind
     {
         // Tokens
 
@@ -41,7 +41,7 @@ namespace VComputer.Assembler.Syntax
         NameExpression,
     }
 
-    public static class SyntaxKindExtensions
+    internal static class SyntaxKindExtensions
     {
         public static bool TryGetText(this SyntaxKind kind, [NotNullWhen(true)] out string? text)
         {

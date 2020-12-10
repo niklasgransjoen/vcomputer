@@ -3,7 +3,7 @@ using VComputer.Util;
 
 namespace VComputer.Components
 {
-    public enum ALUMode
+    internal enum ALUMode
     {
         And = 0x1,
         Or = 0x2,
@@ -13,7 +13,7 @@ namespace VComputer.Components
         Subtract = 0x5,
     }
 
-    public sealed class ALU : BaseComponent
+    internal sealed class ALU : BaseComponent
     {
         private readonly RegA _regA;
         private readonly RegB _regB;

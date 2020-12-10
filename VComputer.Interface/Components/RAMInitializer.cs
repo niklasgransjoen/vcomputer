@@ -4,7 +4,7 @@ using VComputer.Util;
 
 namespace VComputer.Interface.Components
 {
-    public sealed class RAMInitializer : IRAMInitializer
+    internal sealed class RAMInitializer : IRAMInitializer
     {
         private readonly ReadOnlyMemory<int> _memory;
 

@@ -8,8 +8,8 @@ namespace VComputer.Components
 {
     public sealed class Clock : IDisposable
     {
-        public const int MinClockInterval = 1;
-        public const int MaxClockInterval = 10_000;
+        internal const int MinClockInterval = 1;
+        internal const int MaxClockInterval = 10_000;
 
         private readonly ITimer _timer;
 
@@ -17,7 +17,7 @@ namespace VComputer.Components
 
         #region Construct & Dispose
 
-        public Clock(ITimer? timer)
+        internal Clock(ITimer? timer)
         {
             _timer = timer ?? new DefaultTimer();
             _timer.Tick += OnTick;
@@ -52,7 +52,7 @@ namespace VComputer.Components
             }
         }
 
-        public bool Halt { get; internal set; }
+        internal bool Halt { get; set; }
         internal IList<ClockAction> ClockActions { get; } = new List<ClockAction>();
 
         #endregion Properties

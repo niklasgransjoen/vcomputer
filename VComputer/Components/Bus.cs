@@ -5,7 +5,7 @@
     /// </summary>
     public sealed class Bus
     {
-        public Bus(int bitCount)
+        internal Bus(int bitCount)
         {
             BitCount = bitCount;
             Lines = new bool[bitCount];

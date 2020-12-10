@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace VComputer.Interface.Helpers
 {
-    public static class ConsoleHelper
+    internal static class ConsoleHelper
     {
         public static void ClearLine()
         {

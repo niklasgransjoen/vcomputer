@@ -3,7 +3,7 @@ using VComputer.Util;
 
 namespace VComputer.Components
 {
-    public sealed class RAM : BaseComponent
+    internal sealed class RAM : BaseComponent
     {
         private readonly int _bits;
         private readonly bool[][] _values;

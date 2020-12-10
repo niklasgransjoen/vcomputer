@@ -7,7 +7,7 @@
     {
         protected Bus? Bus { get; set; }
 
-        public BaseComponent()
+        protected BaseComponent()
         {
         }
 

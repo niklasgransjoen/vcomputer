@@ -2,7 +2,7 @@
 
 namespace VComputer.Interface
 {
-    public sealed class ConsoleAction
+    internal sealed class ConsoleAction
     {
         public ConsoleAction(Action action, string description)
         {

@@ -9,7 +9,7 @@ namespace VComputer.Components
     /// <summary>
     /// Represents the control logic of the computer.
     /// </summary>
-    public sealed class ControlLogic : IComponent
+    internal sealed class ControlLogic : IComponent
     {
         private readonly int _bits;
         private readonly Dictionary<int, IReadOnlyList<ComputerFlags>> _instructions;
